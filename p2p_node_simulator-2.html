@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>P2P 60-24 — Symulator Węzła</title>
+<style>
+  :root {
+    --bg: #0f1117; --bg2: #171b26; --bg3: #1e2335;
+    --border: rgba(255,255,255,0.08);
+    --text: #e2e8f0; --text2: #94a3b8; --text3: #64748b;
+    --teal: #2dd4bf; --teal-d: #0d9488; --teal-bg: rgba(45,212,191,0.08);
+    --amber: #fbbf24; --amber-bg: rgba(251,191,36,0.08);
+    --blue: #60a5fa; --blue-bg: rgba(96,165,250,0.08);
+    --red: #f87171; --red-bg: rgba(248,113,113,0.08);
+    --purple: #a78bfa; --purple-bg: rgba(167,139,250,0.08);
+    --green: #4ade80; --green-bg: rgba(74,222,128,0.08);
+    --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 13px; line-height: 1.5;
+    min-height: 100vh; padding: 16px;
+  }
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  .shell {
+    max-width: 960px; margin: 0 auto;
+    display: grid; grid-template-columns: 260px 1fr; gap: 12px;
+  }
+  .panel { background: var(--bg2); border: 0.5px solid var(--border); border-radius: 12px; padding: 14px; }
+  .panel-title {
+    font-size: 10px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--text3); margin-bottom: 12px; display: flex; align-items: center; gap: 6px;
+  }
+  .panel-title::after { content:''; flex:1; height:0.5px; background:var(--border); }
+
+  /* HEADER */
+  .topbar {
+    grid-column: 1/-1; background: var(--bg2); border: 0.5px solid var(--border);
+    border-radius: 12px; padding: 12px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .node-badge {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--teal); position: relative; }
+  .pulse::after {
+    content:''; position:absolute; inset:-3px; border-radius:50%;
+    border: 1.5px solid var(--teal); opacity:.4;
+    animation: ring 2s ease-out infinite;
+  }
+  @keyframes ring { 0%{transform:scale(1);opacity:.4} 100%{transform:scale(2.2);opacity:0} }
+  .node-name { font-weight: 600; font-size: 14px; }
+  .node-id-mono { font-family: var(--font-mono); font-size: 10px; color: var(--text3); }
+  .topbar-right { display: flex; gap: 16px; align-items: center; }
+  .uptime { font-family: var(--font-mono); font-size: 11px; color: var(--text2); }
+  .emergence-badge {
+    padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 500;
+    background: var(--blue-bg); color: var(--blue); border: 0.5px solid rgba(96,165,250,.2);
+  }
+
+  /* METRICS */
+  .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+  .metric {
+    background: var(--bg3); border-radius: 8px; padding: 10px;
+    border: 0.5px solid var(--border);
+  }
+  .metric-label { font-size: 10px; color: var(--text3); margin-bottom: 4px; }
+  .metric-val { font-size: 20px; font-weight: 600; line-height: 1; }
+  .metric-sub { font-size: 10px; color: var(--text2); margin-top: 3px; }
+
+  /* BAR */
+  .res-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .res-label { font-size: 10px; color: var(--text3); width: 36px; }
+  .res-bar { flex: 1; height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .res-fill { height: 100%; border-radius: 3px; transition: width .5s ease; }
+  .res-pct { font-size: 10px; font-family: var(--font-mono); color: var(--text2); width: 28px; text-align: right; }
+
+  /* NETWORK SVG */
+  .net-canvas { background: var(--bg3); border-radius: 10px; height: 130px; margin-bottom: 12px; overflow: hidden; position: relative; }
+  .net-canvas svg { width: 100%; height: 100%; }
+
+  /* BTNS */
+  .btn-row { display: flex; flex-direction: column; gap: 6px; }
+  .btn {
+    width: 100%; padding: 8px 12px; border-radius: 8px; font-size: 12px; font-weight: 500;
+    border: 0.5px solid var(--border); cursor: pointer; text-align: left;
+    transition: all .15s; display: flex; align-items: center; gap: 8px;
+    background: var(--bg3); color: var(--text);
+  }
+  .btn:hover { border-color: rgba(255,255,255,.18); background: var(--bg); transform: translateY(-1px); }
+  .btn:active { transform: scale(.98); }
+  .btn-icon { font-size: 14px; }
+  .btn.primary { background: var(--teal-bg); border-color: rgba(45,212,191,.3); color: var(--teal); }
+  .btn.warn { background: var(--amber-bg); border-color: rgba(251,191,36,.3); color: var(--amber); }
+  .btn.info { background: var(--blue-bg); border-color: rgba(96,165,250,.3); color: var(--blue); }
+
+  /* MAIN RIGHT */
+  .main-col { display: flex; flex-direction: column; gap: 12px; }
+
+  /* NEEDS + TASKS */
+  .dual { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .item-list { display: flex; flex-direction: column; gap: 5px; }
+  .item-row {
+    background: var(--bg3); border-radius: 8px; padding: 8px 10px;
+    border: 0.5px solid var(--border); border-left: 3px solid transparent;
+  }
+  .item-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px; }
+  .item-tag { font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .badge { font-size: 10px; padding: 2px 7px; border-radius: 4px; font-weight: 500; white-space: nowrap; }
+  .item-meta { font-size: 10px; color: var(--text3); }
+  .prog-wrap { height: 3px; background: var(--border); border-radius: 2px; margin-top: 5px; overflow: hidden; }
+  .prog-fill { height: 100%; border-radius: 2px; transition: width .4s ease; }
+
+  /* PEERS */
+  .peer-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+  .peer-card {
+    background: var(--bg3); border: 0.5px solid var(--border);
+    border-radius: 10px; padding: 10px; text-align: center;
+  }
+  .peer-avatar {
+    width: 36px; height: 36px; border-radius: 50%; margin: 0 auto 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+  }
+  .peer-name { font-size: 11px; font-weight: 500; margin-bottom: 2px; }
+  .peer-detail { font-size: 10px; color: var(--text3); }
+  .peer-rep { font-size: 14px; font-weight: 600; margin: 4px 0; }
+  .peer-status { font-size: 10px; padding: 2px 7px; border-radius: 10px; display: inline-block; }
+
+  /* LOG */
+  .log {
+    font-family: var(--font-mono); font-size: 11px; color: var(--text2);
+    background: var(--bg3); border-radius: 10px; padding: 10px 12px;
+    height: 120px; overflow-y: auto; border: 0.5px solid var(--border);
+  }
+  .log::-webkit-scrollbar { width: 4px; }
+  .log::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  .log-line { display: flex; gap: 8px; line-height: 1.8; }
+  .log-ts { color: var(--text3); flex-shrink: 0; }
+  .ok { color: var(--teal); } .warn { color: var(--amber); }
+  .err { color: var(--red); } .info { color: var(--blue); }
+
+  /* SOCIAL */
+  .social-row { display: flex; gap: 8px; margin-bottom: 8px; }
+  .social-card {
+    flex: 1; background: var(--bg3); border-radius: 8px;
+    padding: 8px 10px; border: 0.5px solid var(--border); text-align: center;
+  }
+  .social-val { font-size: 18px; font-weight: 600; }
+  .social-label { font-size: 10px; color: var(--text3); }
+
+  .joy-bar-wrap { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; margin: 6px 0 3px; }
+  .joy-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--green), var(--teal)); transition: width .6s ease; }
+
+  .empty { font-size: 11px; color: var(--text3); padding: 6px 0; }
+
+  @keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:none} }
+  .item-row { animation: fadeIn .3s ease; }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="node-badge">
+      <div class="pulse"></div>
+      <div>
+        <div class="node-name">AKO Cell · węzeł aktywny</div>
+        <div class="node-id-mono" id="nodeIdDisplay">id: ładowanie...</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="uptime" id="uptimeDisplay">uptime: 0s</div>
+      <div class="emergence-badge" id="emergenceBadge">N-1 · 4 węzły</div>
+      <div style="font-size:11px;color:var(--text3)">P2P 60-24 OneClick Evo</div>
+    </div>
+  </div>
+
+  <!-- LEFT SIDEBAR -->
+  <div style="display:flex;flex-direction:column;gap:12px">
+
+    <div class="panel">
+      <div class="panel-title">metryki węzła</div>
+      <div class="metric-grid">
+        <div class="metric">
+          <div class="metric-label">Reputacja R(t)</div>
+          <div class="metric-val" id="repVal" style="color:var(--teal)">0.71</div>
+          <div class="metric-sub" id="repLevel">contributor</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Balans HPC</div>
+          <div class="metric-val" id="hpcVal" style="color:var(--amber)">142.5</div>
+          <div class="metric-sub" id="ofiVal">OFI: 38 min</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Prestiż</div>
+          <div class="metric-val" id="prestigeVal" style="color:var(--purple)">2.84</div>
+          <div class="metric-sub">mentor</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Joy Index</div>
+          <div class="metric-val" id="joyVal" style="color:var(--green)">0.72</div>
+          <div class="metric-sub" id="joyStatus">&#x2713; powyżej 0.6</div>
+        </div>
+      </div>
+
+      <div class="panel-title">zasoby</div>
+      <div class="res-row"><span class="res-label">CPU</span><div class="res-bar"><div class="res-fill" id="cpuBar" style="background:var(--blue)"></div></div><span class="res-pct" id="cpuPct">34%</span></div>
+      <div class="res-row">
+        <span class="res-label">RAM</span>
+        <div style="flex:1;position:relative">
+          <div class="res-bar"><div class="res-fill" id="ramBar" style="background:var(--teal);transition:width 1.2s ease"></div></div>
+          <div style="display:flex;justify-content:space-between;margin-top:2px">
+            <span id="ramStateLabel" style="font-size:9px;color:var(--text3)">active</span>
+            <span style="font-size:9px;color:var(--text3)" id="ramTargetLabel"></span>
+          </div>
+        </div>
+        <span class="res-pct" id="ramPct">51%</span>
+      </div>
+      <div style="display:flex;gap:6px;margin:-2px 0 6px 44px">
+        <span style="font-size:9px;padding:1px 5px;border-radius:3px;background:rgba(248,113,113,.15);color:var(--red)">HOT ~5%</span>
+        <span style="font-size:9px;padding:1px 5px;border-radius:3px;background:rgba(251,191,36,.15);color:var(--amber)">WARM ~10%</span>
+        <span style="font-size:9px;padding:1px 5px;border-radius:3px;background:rgba(45,212,191,.15);color:var(--teal)">ACTIVE ~51%</span>
+      </div>
+      <div class="res-row"><span class="res-label">Sieć</span><div class="res-bar"><div class="res-fill" id="netBar" style="background:var(--purple)"></div></div><span class="res-pct" id="netPct">18%</span></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">topologia sieci</div>
+      <div class="net-canvas"><svg id="netSvg" viewBox="0 0 260 130"></svg></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">akcje węzła</div>
+      <div class="btn-row">
+        <button class="btn primary" onclick="broadcastNeed()"><span class="btn-icon">◎</span> Zgłoś potrzebę</button>
+        <button class="btn warn" onclick="acceptTask()"><span class="btn-icon">⬡</span> Przyjmij zadanie WASM</button>
+        <button class="btn info" onclick="sendGossip()"><span class="btn-icon">⇢</span> Gossip do peerów</button>
+        <button class="btn" onclick="simulateHelp()"><span class="btn-icon">♡</span> Pomóż peerowi</button>
+        <button class="btn" onclick="simulateVote()"><span class="btn-icon">✦</span> Głosuj w TrustGroup</button>
+        <button class="btn" id="sleepBtn" onclick="toggleSleep()"><span class="btn-icon">◑</span> Uśpij węzeł</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">tryb energetyczny</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <span style="font-size:11px;color:var(--text2)">status:</span>
+        <span id="sleepLabel" style="font-size:12px;font-weight:500;color:var(--teal)">aktywny</span>
+      </div>
+      <div style="font-size:10px;color:var(--text3);margin-bottom:3px">postęp do następnego trybu</div>
+      <div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:3px">
+        <div id="sleepBar" style="height:100%;width:0%;border-radius:3px;background:var(--teal);transition:width .8s ease"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3)">
+        <span>bezczynność</span><span id="sleepPct">0%</span>
+      </div>
+      <div style="margin-top:8px;font-size:10px;color:var(--text3);line-height:1.7">
+        active → idle: 60s<br>
+        idle → sleep: 300s<br>
+        sleep → idle: sygnał od peera
+      </div>
+    </div>
+
+  </div>
+
+  <!-- MAIN COLUMN -->
+  <div class="main-col">
+
+    <div class="dual">
+      <div class="panel">
+        <div class="panel-title">aktywne potrzeby</div>
+        <div class="item-list" id="needList"><div class="empty">brak aktywnych potrzeb</div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">zadania WASM</div>
+        <div class="item-list" id="taskList"><div class="empty">brak zadań</div></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">peery w sieci</div>
+      <div class="peer-grid" id="peerGrid"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">social cognition</div>
+      <div class="social-row">
+        <div class="social-card">
+          <div class="social-val" id="helpGiven" style="color:var(--teal)">0</div>
+          <div class="social-label">pomocy udzielono</div>
+        </div>
+        <div class="social-card">
+          <div class="social-val" id="helpReceived" style="color:var(--blue)">0</div>
+          <div class="social-label">pomocy otrzymano</div>
+        </div>
+        <div class="social-card">
+          <div class="social-val" id="bridgeScore" style="color:var(--purple)">0.31</div>
+          <div class="social-label">bridge score</div>
+        </div>
+        <div class="social-card">
+          <div class="social-val" id="mediations" style="color:var(--amber)">0</div>
+          <div class="social-label">mediacje</div>
+        </div>
+      </div>
+      <div style="font-size:10px;color:var(--text3);margin-bottom:4px">Joy Index</div>
+      <div class="joy-bar-wrap"><div class="joy-fill" id="joyBar" style="width:72%"></div></div>
+      <div style="font-size:10px;color:var(--text3)">cel: ≥ 0.6 · wartość progowa dla stabilności sieci</div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">log systemowy</div>
+      <div class="log" id="sysLog"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const nodeId = 'a3f9' + Math.random().toString(16).slice(2,8).toUpperCase();
+document.getElementById('nodeIdDisplay').textContent = 'id: ' + nodeId;
+
+const S = {
+  rep: 0.71, hpc: 142.5, ofi: 38, prestige: 2.84, joy: 0.72,
+  cpu: 34, ram: 51, net: 18, uptime: 0, ticks: 0,
+  helpGiven: 0, helpReceived: 3, mediations: 0, bridgeScore: 0.31,
+  peers: [
+    { id: 'B7C2', name: 'Node-Kraków', rep: 0.88, hpc: 210, status: 'compute', color: '#2dd4bf', bg: 'rgba(45,212,191,.12)' },
+    { id: 'E1A5', name: 'Node-Gdańsk', rep: 0.62, hpc: 87,  status: 'storage', color: '#60a5fa', bg: 'rgba(96,165,250,.12)' },
+    { id: 'F4D8', name: 'Node-Wrocław', rep: 0.45, hpc: 33,  status: 'idle',    color: '#fbbf24', bg: 'rgba(251,191,36,.12)' },
+  ],
+  needs: [], tasks: [], log: []
+};
+
+const NEEDS = [
+  { tag: 'naprawa.roweru',      cat: 'transport',  urgency: 'want',     cost: 5  },
+  { tag: 'lekcja.angielskiego', cat: 'education',  urgency: 'expect',   cost: 8  },
+  { tag: 'dostawa.warzyw',      cat: 'agriculture',urgency: 'must',     cost: 12 },
+  { tag: 'konsultacja.prawna',  cat: 'finance',    urgency: 'critical', cost: 20 },
+  { tag: 'hosting.pliku',       cat: 'storage',    urgency: 'want',     cost: 3  },
+  { tag: 'tłumaczenie.PL-EN',   cat: 'culture',    urgency: 'expect',   cost: 6  },
+  { tag: 'mediation.sporu',     cat: 'mediation',  urgency: 'must',     cost: 15 },
+];
+
+const U_STYLE = {
+  want:     { bg:'rgba(45,212,191,.12)',  text:'#2dd4bf', border:'#2dd4bf' },
+  expect:   { bg:'rgba(96,165,250,.12)', text:'#60a5fa', border:'#60a5fa' },
+  must:     { bg:'rgba(251,191,36,.12)', text:'#fbbf24', border:'#fbbf24' },
+  critical: { bg:'rgba(248,113,113,.12)',text:'#f87171', border:'#f87171' },
+};
+const T_COLOR = { broadcast:'#94a3b8', assigned:'#60a5fa', running:'#fbbf24', completed:'#2dd4bf', verified:'#a78bfa', failed:'#f87171' };
+const REP_LEVELS = [[0.9,'network_pillar'],[0.75,'architect'],[0.6,'mentor'],[0.4,'contributor'],[0,'participant']];
+
+function repLevel(r) { return REP_LEVELS.find(([t])=>r>=t)[1]; }
+function fmt(s) { return s<60?s+'s':s<3600?Math.floor(s/60)+'m '+s%60+'s':Math.floor(s/3600)+'h '+Math.floor(s%3600/60)+'m'; }
+function rnd(n,d=2) { return Number(n.toFixed(d)); }
+
+function addLog(msg, type='ok') {
+  const d = new Date(); const ts = d.toTimeString().slice(0,8);
+  S.log.unshift({ts,msg,type});
+  if(S.log.length>60) S.log.pop();
+  renderLog();
+}
+function renderLog() {
+  document.getElementById('sysLog').innerHTML = S.log.slice(0,20).map(l=>
+    `<div class="log-line"><span class="log-ts">${l.ts}</span><span class="${l.type}">${l.msg}</span></div>`
+  ).join('');
+}
+function renderMetrics() {
+  document.getElementById('repVal').textContent = rnd(S.rep);
+  document.getElementById('repLevel').textContent = repLevel(S.rep);
+  document.getElementById('hpcVal').textContent = rnd(S.hpc,1);
+  document.getElementById('ofiVal').textContent = 'OFI: '+Math.round(S.ofi)+' min';
+  document.getElementById('prestigeVal').textContent = rnd(S.prestige);
+  document.getElementById('joyVal').textContent = rnd(S.joy);
+  const jok = S.joy>=0.6;
+  document.getElementById('joyStatus').textContent = jok ? '✓ powyżej 0.6' : '⚠ poniżej progu';
+  document.getElementById('joyStatus').style.color = jok ? 'var(--green)' : 'var(--amber)';
+  document.getElementById('joyBar').style.width = (S.joy*100).toFixed(0)+'%';
+  const cb=document.getElementById('cpuBar'), rb=document.getElementById('ramBar'), nb=document.getElementById('netBar');
+  cb.style.width = S.cpu+'%'; cb.style.background = S.cpu>80?'var(--red)':'var(--blue)';
+  rb.style.width = S.ram+'%';
+  // RAM kolor + etykieta zależnie od poziomu
+  const ramLbl = document.getElementById('ramStateLabel');
+  const ramTgt = document.getElementById('ramTargetLabel');
+  if (S.ram <= 12) {
+    rb.style.background = 'var(--red)';
+    if(ramLbl) { ramLbl.textContent='HOT — tylko klucze + watchdog'; ramLbl.style.color='var(--red)'; }
+    if(ramTgt) ramTgt.textContent='';
+  } else if (S.ram <= 22) {
+    rb.style.background = 'var(--amber)';
+    if(ramLbl) { ramLbl.textContent='WARM — peers + needs'; ramLbl.style.color='var(--amber)'; }
+    if(ramTgt) ramTgt.textContent='';
+  } else {
+    rb.style.background = 'var(--teal)';
+    if(ramLbl) { ramLbl.textContent = currentMode==='sleep'?'flush w toku...':currentMode==='idle'?'partial flush':'active'; ramLbl.style.color='var(--text3)'; }
+    if(ramTgt && currentMode==='sleep') ramTgt.textContent='cel: ~10%';
+    else if(ramTgt) ramTgt.textContent='';
+  }
+  nb.style.width = S.net+'%';
+  document.getElementById('cpuPct').textContent = Math.round(S.cpu)+'%';
+  document.getElementById('ramPct').textContent = Math.round(S.ram)+'%';
+  document.getElementById('netPct').textContent = Math.round(S.net)+'%';
+  document.getElementById('uptimeDisplay').textContent = 'uptime: '+fmt(S.uptime);
+  const total = 1+S.peers.length;
+  const em = total>=300?'N-3':total>=100?'N-2':total>=20?'N-1':'N-0';
+  document.getElementById('emergenceBadge').textContent = em+' · '+total+' węzły';
+  document.getElementById('helpGiven').textContent = S.helpGiven;
+  document.getElementById('helpReceived').textContent = S.helpReceived;
+  document.getElementById('bridgeScore').textContent = rnd(S.bridgeScore);
+  document.getElementById('mediations').textContent = S.mediations;
+}
+function renderPeers() {
+  document.getElementById('peerGrid').innerHTML = S.peers.map(p=>{
+    const sc = p.status==='compute'?'var(--blue)':p.status==='storage'?'var(--teal)':'var(--text3)';
+    const sb = p.status==='compute'?'var(--blue-bg)':p.status==='storage'?'var(--teal-bg)':'var(--bg)';
+    const rc = p.rep>=0.7?'var(--green)':p.rep>=0.5?'var(--teal)':'var(--amber)';
+    return `<div class="peer-card">
+      <div class="peer-avatar" style="background:${p.bg};color:${p.color}">${p.id.slice(0,2)}</div>
+      <div class="peer-name">${p.name}</div>
+      <div class="peer-rep" style="color:${rc}">${rnd(p.rep)}</div>
+      <div class="peer-detail">${rnd(p.hpc,0)} HPC</div>
+      <div class="peer-status" style="background:${sb};color:${sc}">${p.status}</div>
+    </div>`;
+  }).join('');
+}
+function renderNeeds() {
+  const el = document.getElementById('needList');
+  const v = S.needs.slice(-5).reverse();
+  if(!v.length){el.innerHTML='<div class="empty">brak aktywnych potrzeb</div>';return;}
+  el.innerHTML = v.map(n=>{
+    const u=U_STYLE[n.urgency], age=Math.floor((Date.now()-n.created)/1000);
+    return `<div class="item-row" style="border-color:${u.border}">
+      <div class="item-header">
+        <span class="item-tag">${n.tag}</span>
+        <span class="badge" style="background:${u.bg};color:${u.text}">${n.urgency}</span>
+      </div>
+      <div class="item-meta">${n.cat} · ${n.cost} HPC · ${age<60?age+'s':Math.floor(age/60)+'m'} temu · <span style="color:${u.text}">${n.state}</span></div>
+    </div>`;
+  }).join('');
+}
+function renderTasks() {
+  const el = document.getElementById('taskList');
+  const v = S.tasks.slice(-5).reverse();
+  if(!v.length){el.innerHTML='<div class="empty">brak zadań WASM</div>';return;}
+  el.innerHTML = v.map(t=>{
+    const c=T_COLOR[t.state]||'#94a3b8';
+    const pct=t.state==='verified'?100:t.state==='completed'?90:t.state==='running'?t.prog:t.state==='assigned'?15:0;
+    return `<div class="item-row">
+      <div class="item-header">
+        <span style="font-family:monospace;font-size:10px;color:var(--text3)">wasm:${t.id}</span>
+        <span class="badge" style="background:${c}22;color:${c}">${t.state}</span>
+      </div>
+      <div class="item-meta">${rnd(t.reward,1)} HPC · ${t.cpuMs}ms max</div>
+      <div class="prog-wrap"><div class="prog-fill" style="width:${pct}%;background:${c}"></div></div>
+    </div>`;
+  }).join('');
+}
+function renderNetwork() {
+  const svg = document.getElementById('netSvg');
+  const cx=130,cy=62,peers=S.peers;
+  const angles=[200,270,340].map(d=>d*Math.PI/180);
+  const pp=angles.map(a=>({x:cx+Math.cos(a)*82,y:cy+Math.sin(a)*44}));
+  svg.innerHTML=
+    pp.map((p,i)=>`<line x1="${cx}" y1="${cy}" x2="${p.x}" y2="${p.y}" stroke="${peers[i].color}" stroke-width="1" opacity="0.35"/>`).join('')+
+    pp.map((p,i)=>`<circle cx="${p.x}" cy="${p.y}" r="15" fill="${peers[i].bg}" stroke="${peers[i].color}" stroke-width="0.8"/>
+      <text x="${p.x}" y="${p.y+1}" text-anchor="middle" dominant-baseline="central" font-size="8" fill="${peers[i].color}" font-family="monospace">${peers[i].id.slice(0,4)}</text>`).join('')+
+    `<circle cx="${cx}" cy="${cy}" r="20" fill="rgba(96,165,250,.12)" stroke="#60a5fa" stroke-width="1.5"/>
+     <text x="${cx}" y="${cy+1}" text-anchor="middle" dominant-baseline="central" font-size="8" fill="#60a5fa" font-family="monospace">YOU</text>
+     <text x="${cx}" y="120" text-anchor="middle" font-size="9" fill="#475569" font-family="system-ui">emergencja: N-1 · ${1+S.peers.length} węzłów</text>`;
+}
+
+// ─── SLEEP STATE MACHINE ────────────────────────────────────────────────────
+// Trzy tryby: active | idle | sleep
+// Przejścia: brak aktywności → idle → sleep → (wybudzenie przez event)
+
+const SLEEP_MODES = {
+  active: { label:'aktywny',    color:'var(--teal)',   tickMs:1000,  peerMs:4000,  netMs:4000,  gossipMs:30000 },
+  idle:   { label:'idle',       color:'var(--amber)',  tickMs:5000,  peerMs:15000, netMs:15000, gossipMs:120000 },
+  sleep:  { label:'uśpiony',    color:'var(--text3)',  tickMs:30000, peerMs:null,  netMs:null,  gossipMs:null  },
+};
+
+let currentMode = 'active';
+let inactivitySec = 0;
+let timers = { tick: null, peer: null, net: null, gossip: null };
+
+const IDLE_THRESHOLD   = 60;   // sekund bez akcji → idle
+const SLEEP_THRESHOLD  = 300;  // sekund w idle → sleep
+const WAKEUP_HPC_MIN   = 20;   // poniżej tego HPC nie zasypiaj
+
+function setMode(mode) {
+  if (mode === currentMode) return;
+  const prev = currentMode;
+  currentMode = mode;
+  const m = SLEEP_MODES[mode];
+
+  // zatrzymaj wszystkie timery
+  Object.values(timers).forEach(t => { if(t) clearInterval(t); });
+
+  // ustaw nowe timery wg trybu
+  timers.tick = setInterval(tick, m.tickMs);
+  if (m.peerMs)  timers.peer   = setInterval(()=>{ renderPeers(); }, m.peerMs);
+  if (m.netMs)   timers.net    = setInterval(()=>{ renderNetwork(); }, m.netMs);
+  if (m.gossipMs) timers.gossip = setInterval(autoGossip, m.gossipMs);
+
+  // aktualizuj UI
+  updateSleepUI(mode);
+  inactivitySec = 0;
+
+  const arrows = { active:'→', idle:'⇢', sleep:'⇣' };
+  addLog(`SLEEP_STATE ${prev} ${arrows[mode]||'→'} ${mode} · tick=${m.tickMs}ms`,'warn');
+
+  // efekty fizyczne trybu — CPU + NET natychmiast, RAM animowany
+  if (mode === 'sleep') {
+    S.cpu = Math.max(1, S.cpu * 0.15);
+    S.net = Math.max(0, S.net * 0.05);
+    renderMetrics();
+    // RAM: animowany flush — trzy fazy HOT/WARM/COLD
+    addLog(`SLEEP EnterSleep() · flush BadgerDB · czyszczę bufory`,'warn');
+    const ramStart = S.ram;
+    // faza 1: gossip buffer + logi (szybka, ~500ms)
+    setTimeout(() => {
+      S.ram = Math.max(ramStart * 0.72, 20);
+      addLog(`RAM flush [1/3] · gossip buffer · log buffer · zwolniono ${Math.round(ramStart - S.ram)}%`,'warn');
+      renderMetrics();
+    }, 500);
+    // faza 2: tablica peerów + historia zadań (~1s)
+    setTimeout(() => {
+      S.ram = Math.max(ramStart * 0.38, 14);
+      addLog(`RAM flush [2/3] · peer table → DB · task history → DB · zwolniono łącznie ${Math.round(ramStart - S.ram)}%`,'warn');
+      renderMetrics();
+    }, 1200);
+    // faza 3: BadgerDB cache + GC (~1.8s) → stan COLD
+    setTimeout(() => {
+      S.ram = 8 + Math.random() * 4; // 8–12% HOT state
+      addLog(`RAM flush [3/3] · BadgerDB cache → dysk · GC · FreeOSMemory() · RAM=${Math.round(S.ram)}% ✓`,'ok');
+      renderMetrics();
+    }, 2200);
+  }
+  if (mode === 'idle') {
+    S.cpu = Math.max(3, S.cpu * 0.4);
+    S.net = Math.max(1, S.net * 0.2);
+    // RAM: częściowy flush — tylko bufory, nie DB
+    const ramStart = S.ram;
+    setTimeout(() => {
+      S.ram = Math.max(ramStart * 0.65, 18);
+      addLog(`IDLE RAM partial flush · gossip buffer · log trim · RAM=${Math.round(S.ram)}%`,'warn');
+      renderMetrics();
+    }, 600);
+  }
+  if (mode === 'active' && prev !== 'active') {
+    addLog(`WAKEUP OnWakeUp() · przywracam stan z dysku`,'ok');
+    S.cpu = 15 + Math.random() * 20;
+    S.net = 8 + Math.random() * 12;
+    // RAM: ciepłe wybudzenie — ładuj WARM (~200ms)
+    setTimeout(() => {
+      S.ram = 22 + Math.random() * 8;
+      addLog(`WAKEUP RAM warm load · peers · active needs · ~200ms · RAM=${Math.round(S.ram)}%`,'ok');
+      renderMetrics();
+    }, 200);
+    // potem pełny stan ACTIVE (~1s)
+    setTimeout(() => {
+      S.ram = 42 + Math.random() * 12;
+      addLog(`WAKEUP RAM full restore · BadgerDB · gossip ready · RAM=${Math.round(S.ram)}%`,'ok');
+      renderMetrics();
+    }, 1000);
+  }
+}
+
+function wakeUp(reason) {
+  if (currentMode === 'active') return;
+  inactivitySec = 0;
+  addLog(`WAKEUP trigger: ${reason}`,'ok');
+  setMode(currentMode === 'sleep' ? 'idle' : 'active');
+  setTimeout(() => setMode('active'), 800);
+}
+
+function updateSleepUI(mode) {
+  const m = SLEEP_MODES[mode];
+  const dot = document.querySelector('.pulse');
+  const label = document.getElementById('sleepLabel');
+  const bar = document.getElementById('sleepBar');
+  const pct = document.getElementById('sleepPct');
+  const btn = document.getElementById('sleepBtn');
+  if (dot) dot.style.background = m.color;
+  if (label) { label.textContent = m.label; label.style.color = m.color; }
+  if (bar && pct) {
+    const thresh = currentMode === 'active' ? IDLE_THRESHOLD : SLEEP_THRESHOLD;
+    const p = Math.min(100, Math.round(inactivitySec / thresh * 100));
+    bar.style.width = p + '%';
+    bar.style.background = m.color;
+    pct.textContent = p + '%';
+  }
+  if (btn) {
+    if (mode === 'active') { btn.textContent = 'Uśpij węzeł'; btn.className='btn'; }
+    else { btn.textContent = 'Obudź węzeł ↑'; btn.className='btn primary'; }
+  }
+}
+
+function checkInactivity() {
+  if (currentMode === 'active') {
+    inactivitySec += 1;
+    updateSleepUI('active');
+    if (inactivitySec >= IDLE_THRESHOLD && S.hpc > WAKEUP_HPC_MIN) setMode('idle');
+  } else if (currentMode === 'idle') {
+    inactivitySec += 1;
+    updateSleepUI('idle');
+    if (inactivitySec >= SLEEP_THRESHOLD) setMode('sleep');
+  } else if (currentMode === 'sleep') {
+    // w trybie sleep: lekki decay HPC (hibernacja kosztuje minimalnie)
+    S.hpc = Math.max(0, S.hpc - 0.001);
+    updateSleepUI('sleep');
+  }
+}
+setInterval(checkInactivity, 1000);
+
+function autoGossip() {
+  if (currentMode === 'sleep') return;
+  const p = S.peers[Math.floor(Math.random() * S.peers.length)];
+  addLog(`AUTO-GOSSIP → ${p.name} · heartbeat · tryb=${currentMode}`,'info');
+}
+
+function toggleSleep() {
+  if (currentMode === 'active' || currentMode === 'idle') setMode('sleep');
+  else wakeUp('ręczne wybudzenie');
+}
+
+// ─── AKCJE (z wakeup + reset inactivity) ─────────────────────────────────────
+function broadcastNeed() {
+  wakeUp('nowa potrzeba'); inactivitySec=0;
+  const t=NEEDS[Math.floor(Math.random()*NEEDS.length)];
+  const n={...t,id:Math.random().toString(16).slice(2,8).toUpperCase(),created:Date.now(),state:'forming'};
+  S.needs.push(n); S.hpc=Math.max(0,S.hpc-t.cost*0.1); S.net=Math.min(95,S.net+8);
+  addLog(`NEED broadcast: ${n.tag} [${n.urgency}] → 3 peery`,'info');
+  renderNeeds(); renderMetrics();
+  setTimeout(()=>{ n.state='matching'; renderNeeds(); addLog(`NEED matched: ${n.tag} → ${S.peers[0].name}`,'ok'); },2200);
+  setTimeout(()=>{
+    n.state='fulfilled'; S.rep=Math.min(1,S.rep+0.005); S.ofi+=5; S.joy=Math.min(1,S.joy+0.01);
+    renderNeeds(); renderMetrics(); addLog(`NEED fulfilled: ${n.tag} · rep+0.005 · joy+0.01`,'ok');
+  },4800);
+}
+function acceptTask() {
+  wakeUp('nowe zadanie WASM'); inactivitySec=0;
+  const t={id:Math.random().toString(16).slice(2,10).toUpperCase(),state:'broadcast',reward:5+Math.random()*15,cpuMs:300+Math.floor(Math.random()*2200),prog:0};
+  S.tasks.push(t); S.cpu=Math.min(92,S.cpu+14);
+  addLog(`TASK broadcast received: wasm:${t.id} reward=${rnd(t.reward,1)} HPC`,'info');
+  renderTasks(); renderMetrics();
+  setTimeout(()=>{ t.state='assigned'; renderTasks(); addLog(`TASK assigned: wasm:${t.id}`,'info'); },500);
+  setTimeout(()=>{ t.state='running'; addLog(`TASK running: wasm:${t.id} · executing WASM module`,'warn'); },1200);
+  let pr=0; const iv=setInterval(()=>{ pr+=6+Math.random()*10; t.prog=Math.min(85,pr); renderTasks(); if(pr>=85)clearInterval(iv); },350);
+  setTimeout(()=>{ t.state='completed'; t.prog=90; addLog(`TASK completed: wasm:${t.id} · result_hash=a3f9...`,'ok'); renderTasks(); },4000);
+  setTimeout(()=>{
+    t.state='verified'; t.prog=100; S.hpc+=t.reward; S.rep=Math.min(1,S.rep+0.008); S.prestige+=0.02; S.cpu=Math.max(5,S.cpu-12);
+    addLog(`TASK verified ✓ · +${rnd(t.reward,1)} HPC · rep+0.008 · 3/3 confirmations`,'ok');
+    renderTasks(); renderMetrics();
+  },6000);
+}
+function sendGossip() {
+  wakeUp('gossip'); inactivitySec=0;
+  const p=S.peers[Math.floor(Math.random()*S.peers.length)];
+  S.net=Math.min(95,S.net+6);
+  addLog(`GOSSIP → ${p.name} · fitness=2.4 · pheromone:innovation`,'info');
+  renderMetrics();
+  setTimeout(()=>{
+    p.rep=Math.min(1,p.rep+(Math.random()*0.02-0.01)); S.net=Math.max(2,S.net-5);
+    addLog(`GOSSIP ack ← ${p.name} · 2 projekty · reputacja zsynchronizowana`,'ok');
+    renderPeers(); renderMetrics();
+  },1400);
+}
+function simulateHelp() {
+  wakeUp('pomoc'); inactivitySec=0;
+  const p=S.peers[Math.floor(Math.random()*S.peers.length)];
+  const h=2+Math.floor(Math.random()*8);
+  S.hpc=Math.max(0,S.hpc-h); S.ofi+=10; S.rep=Math.min(1,S.rep+0.012); S.prestige+=0.03; S.helpGiven++;
+  S.joy=Math.min(1,S.joy+0.015); S.bridgeScore=Math.min(1,S.bridgeScore+0.005);
+  addLog(`HELP → ${p.name} · ${h} HPC · G=α·H → rep+0.012 · joy+0.015`,'ok');
+  renderMetrics();
+  setTimeout(()=>{ S.helpReceived++; addLog(`GRATITUDE ← ${p.name} · wdzięczność zapisana · joy_index+0.02`,'ok'); renderMetrics(); },1600);
+}
+function simulateVote() {
+  wakeUp('głosowanie'); inactivitySec=0;
+  addLog(`VOTE → TrustGroup:GT-waw-01 · propozycja governance`,'info');
+  setTimeout(()=>{
+    S.rep=Math.min(1,S.rep+0.003); S.prestige+=0.01; S.mediations++;
+    addLog(`VOTE accepted · 3/3 podpisy ed25519 · membership_hash zapisany`,'ok');
+    renderMetrics();
+  },2200);
+}
+
+// ─── TICK — zoptymalizowany (brak renderowania gdy brak zmian) ────────────────
+let _prevCpu=-1, _prevRam=-1, _prevRep=-1, _prevHpc=-1;
+function tick() {
+  S.uptime++;  S.ticks++;
+
+  // zasoby: amplituda zależy od trybu
+  const amp = currentMode==='active' ? 1 : currentMode==='idle' ? 0.2 : 0.02;
+  S.cpu = Math.max(currentMode==='sleep'?0.5:3, Math.min(95, S.cpu+(Math.random()-.5)*5*amp));
+  S.ram = Math.max(currentMode==='sleep'?8:20,  Math.min(88, S.ram+(Math.random()-.5)*2*amp));
+  S.net = Math.max(currentMode==='sleep'?0:2,   Math.min(60, S.net+(Math.random()-.5)*4*amp));
+
+  // decay tylko raz na 30 ticków (niezależnie od tick interval)
+  if(S.ticks%30===0){
+    S.rep=Math.max(0,S.rep*0.9995); S.prestige=Math.max(0,S.prestige*0.9998); S.ofi+=1;
+  }
+  // peery tylko gdy aktywny
+  if(currentMode==='active' && S.ticks%15===0){
+    const p=S.peers[Math.floor(Math.random()*S.peers.length)];
+    p.rep=Math.max(0,Math.min(1,p.rep+(Math.random()*.04-.02)));
+    p.hpc=Math.max(0,p.hpc+(Math.random()-.48)*6);
+  }
+  // logi systemowe tylko gdy aktywny/idle
+  if(currentMode!=='sleep' && S.ticks%40===0){
+    const msgs=[
+      ['pheromone:innovation propaguje przez sieć','info'],
+      ['heartbeat → 3/3 peerów odpowiedziało','ok'],
+      ['energia sieci stabilna · aktywne projekty: 2','ok'],
+      ['gossip selektywny · fitness>2.0 · 1 projekt','info'],
+      ['decay R(t) -0.001 · prestiż stabilny','warn'],
+      ['agent równowagi: joy_index OK · sieć zdrowa','ok'],
+    ];
+    const m=msgs[Math.floor(Math.random()*msgs.length)]; addLog(m[0],m[1]);
+  }
+  // renderuj metryki tylko gdy wartości się zmieniły (dirty check)
+  const cpuR=Math.round(S.cpu), ramR=Math.round(S.ram), repR=rnd(S.rep), hpcR=rnd(S.hpc,1);
+  if(cpuR!==_prevCpu||ramR!==_prevRam||repR!==_prevRep||hpcR!==_prevHpc){
+    renderMetrics(); _prevCpu=cpuR; _prevRam=ramR; _prevRep=repR; _prevHpc=hpcR;
+  }
+}
+
+// ─── START — dynamiczne timery wg trybu ──────────────────────────────────────
+renderMetrics(); renderPeers(); renderNeeds(); renderTasks(); renderNetwork(); renderLog();
+addLog('węzeł uruchomiony · P2P 60-24 OneClick Evo v5.0','ok');
+addLog('WireGuard aktywny · 10.60.24.x · BadgerDB OK','ok');
+addLog('bootstrap peers: 3 · DHT ready · gossip aktywny','info');
+addLog(`tryb uśpienia: idle po ${IDLE_THRESHOLD}s · sleep po ${SLEEP_THRESHOLD}s bezczynności`,'warn');
+// uruchom timery dla trybu 'active'
+setMode('active');
+</script>
+</body>
+</html>

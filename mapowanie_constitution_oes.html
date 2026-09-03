@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CONSTITUTION → OES Mapowanie</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      min-height: 100vh;
+      padding: 2rem;
+      line-height: 1.6;
+    }
+    .container { max-width: 1400px; margin: 0 auto; }
+    
+    header {
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      margin-bottom: 2rem;
+    }
+    h1 { color: #1a365d; font-size: 2.5rem; margin-bottom: 0.5rem; }
+    .subtitle { color: #4a5568; font-size: 1.1rem; }
+    
+    .layers { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; }
+    
+    .layer {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .layer:hover { transform: translateY(-4px); box-shadow: 0 8px 12px rgba(0,0,0,0.15); }
+    
+    .layer-header {
+      padding: 1.5rem;
+      font-weight: 600;
+      font-size: 1.1rem;
+      color: white;
+      border-left: 5px solid;
+    }
+    
+    .layer-0 .layer-header { background: #2d3748; border-left-color: #e53e3e; }
+    .layer-1 .layer-header { background: #1a365d; border-left-color: #3182ce; }
+    .layer-2 .layer-header { background: #22543d; border-left-color: #38a169; }
+    .layer-3 .layer-header { background: #4c3f1f; border-left-color: #d69e2e; }
+    .layer-4 .layer-header { background: #5a4a7a; border-left-color: #9f7aea; }
+    .layer-5 .layer-header { background: #2d5a4e; border-left-color: #38b2ac; }
+    .layer-6 .layer-header { background: #604927; border-left-color: #ed8936; }
+    .layer-7 .layer-header { background: #3a366b; border-left-color: #6366f1; }
+    
+    .layer-content { padding: 1.5rem; }
+    
+    .principle {
+      background: #f7fafc;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border-left: 3px solid #cbd5e0;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .principle:hover {
+      background: #edf2f7;
+      border-left-color: #4299e1;
+    }
+    .principle strong { color: #1a365d; }
+    .principle-desc { font-size: 0.9rem; color: #4a5568; margin-top: 0.5rem; }
+    
+    .mapping {
+      background: #f0fff4;
+      padding: 0.75rem;
+      border-radius: 4px;
+      margin-top: 0.5rem;
+      font-size: 0.85rem;
+      color: #22543d;
+      border-left: 3px solid #38a169;
+    }
+    
+    .arrow { text-align: center; padding: 1rem; color: #cbd5e0; font-size: 1.5rem; }
+    
+    .flow-section {
+      margin-top: 2rem;
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .flow-title {
+      font-size: 1.5rem;
+      color: #1a365d;
+      margin-bottom: 1.5rem;
+      border-bottom: 3px solid #3182ce;
+      padding-bottom: 0.5rem;
+    }
+    
+    .flow-steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+    
+    .step {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 1.5rem;
+      border-radius: 8px;
+      text-align: center;
+    }
+    .step strong { font-size: 1.1rem; }
+    .step-sub { font-size: 0.85rem; opacity: 0.9; margin-top: 0.5rem; }
+    
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    @media (max-width: 768px) { .grid-2 { grid-template-columns: 1fr; } }
+    
+    .table-wrapper {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      margin: 2rem 0;
+      overflow-x: auto;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th {
+      background: #edf2f7;
+      padding: 1rem;
+      text-align: left;
+      font-weight: 600;
+      color: #1a365d;
+      border-bottom: 2px solid #cbd5e0;
+    }
+    td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    tr:hover { background: #f7fafc; }
+    
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-right: 0.25rem;
+    }
+    .badge-law { background: #fed7d7; color: #c53030; }
+    .badge-arch { background: #bee3f8; color: #2c5282; }
+    .badge-impl { background: #c6f6d5; color: #22543d; }
+    .badge-ai { background: #feebc8; color: #7c2d12; }
+    
+    footer {
+      text-align: center;
+      margin-top: 3rem;
+      color: #718096;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>📋 CONSTITUTION v0.3.3 → OES</h1>
+      <p class="subtitle">Mapowanie zasad na funkcjonalność Ontologicznego Edytora Systemów</p>
+    </header>
+
+    <div class="layers">
+      <!-- Layer 0: Covenant -->
+      <div class="layer layer-0">
+        <div class="layer-header">⚖️ COVENANT (Prawo przetrwania)</div>
+        <div class="layer-content">
+          <div class="principle">
+            <strong>Człowiek = byt pierwotny</strong>
+            <div class="mapping">✓ OES: Wszystkie byty modelują ludzi lub ich działania</div>
+          </div>
+          <div class="principle">
+            <strong>Relacja > Konto</strong>
+            <div class="mapping">✓ OES: Każda relacja to byt ontologiczny z historią</div>
+          </div>
+          <div class="principle">
+            <strong>Decentralizacja absolut</strong>
+            <div class="mapping">✓ OES: Federacyjny · każdy węzeł autonomiczny</div>
+          </div>
+          <div class="principle">
+            <strong>Offline-first</strong>
+            <div class="mapping">✓ OES: Działa bez internetu · synchronizacja gdy dostępna</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Layer 1: OmniKernel -->
+      <div class="layer layer-1">
+        <div class="layer-header">🔬 OmniKernel (Prawa fizyki)</div>
+        <div class="layer-content">
+          <div class="principle">
+            <strong>Identity</strong>
+            <div class="mapping">→ NodeID (każdy byt has unique ID)</div>
+          </div>
+          <div class="principle">
+            <strong>Trust</strong>
+            <div class="mapping">→ TrustMetric (dynamiczne · kontinuum)</div>
+          </div>
+          <div class="principle">
+            <strong>Signal</strong>
+            <div class="mapping">→ Event / Communication</div>
+          </div>
+          <div class="principle">
+            <strong>State</strong>
+            <div class="mapping">→ StateVector (append-only history)</div>
+          </div>
+          <div class="principle">
+            <strong>Time</strong>
+            <div class="mapping">→ VectorClock (przyczynowość)</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Layer 2: Decentralization -->
+      <div class="layer layer-2">
+        <div class="layer-header">🌐 Decentralizacja (D-1..D-3)</div>
+        <div class="layer-content">
+          <div class="principle">
+            <strong>D-1: Brak centrum</strong>
+            <div class="mapping">→ każdy węzeł OES samodzielny</div>
+          </div>
+          <div class="principle">
+            <strong>D-2: Zaufanie jako dostęp</strong>
+            <div class="mapping">→ dostęp do OES = f(trust_score)</div>
+          </div>
+          <div class="principle">
+            <strong>D-3: Lokalność pierwotna</strong>
+            <div class="mapping">→ edycja wykresu lokalna · sync przez gossip</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Layer 3: RealBond -->
+      <div class="layer layer-3">
+        <div class="layer-header">🤝 RealBond (R-1..R-22)</div>
+        <div class="layer-content">
+          <div class="principle">
+            <strong>R-1/R-2: Profile + decay</strong>
+            <div class="mapping">→ typ relacji określa jak wygasa</div>
+          </div>
+          <div class="principle">
+            <strong>R-4: Zerowanie by człowieka</strong>
+            <div class="mapping">→ reset relacji wymaga zgody</div>
+          </div>
+          <div class="principle">
+            <strong>R-6: DAG zaufania</strong>
+            <div class="mapping">→ sieć = graf acykliczny · nie drzewo</div>
+          </div>
+          <div class="principle">
+            <strong>O-7: Blind scoring</strong>
+            <div class="mapping">→ wagi prywatne · routing publiczny</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Layer 4: Swarm -->
+      <div class="layer layer-4">
+        <div class="layer-header">🐝 Swarm Intelligence (SW-1..SW-5)</div>
+        <div class="layer-content">
+          <div class="principle">
+            <strong>SW-1: Lokalność > centralizacja</strong>
+            <div class="mapping">→ edycja OES bez serwera centralnego</div>
+          </div>
+          <div class="principle">
+            <strong>SW-2: Reputacja relacyjna</strong>
+            <div class="mapping">→ trust(A,B) ≠ trust(C,B)</div>
+          </div>
+          <div class="principle">
+            <strong>SW-3: Decay informacji</strong>
+            <div class="mapping">→ stara sugestia OES = mniej ważna</div>
+          </div>
+          <div class="principle">
+            <strong>SW-5: System ewoluuje</strong>
+            <div class="mapping">→ OES uczy się z użycia</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Layer 5: Entities -->
+      <div class="layer layer-5">
+        <div class="layer-header">📦 Byty systemowe (15)</div>
+        <div class="layer-content">
+          <div class="principle">
+            <strong>Istniejące (8)</strong>
+            <div class="mapping">Node · Relation · Event · RealBond · Interaction · InviteToken · Module · TrustMetric</div>
+          </div>
+          <div class="principle">
+            <strong>Nowe dla OES (7)</strong>
+            <div class="mapping">Context · Group · Need · Offer · Pledge · Dispute · Reputation</div>
+          </div>
+          <div class="principle">
+            <strong>Ontologia SEE-MG</strong>
+            <div class="mapping">State · Event · Expression · Memory · Relations · Objects · Goals</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Layer 6: AI -->
+      <div class="layer layer-6">
+        <div class="layer-header">🧠 AI w systemie (AI-I/D)</div>
+        <div class="layer-content">
+          <div class="principle">
+            <strong>AI-I: Infrastrukturalny</strong>
+            <div class="mapping">→ monitoring · routing · anomalie</div>
+          </div>
+          <div class="principle">
+            <strong>AI-D: Decyzyjny</strong>
+            <div class="mapping">→ chatbot · sugestie · formularze OES</div>
+          </div>
+          <div class="principle">
+            <strong>Twarda reguła</strong>
+            <div class="mapping">AI oblicza → Człowiek zatwierdza → System wykonuje</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Layer 7: Transport -->
+      <div class="layer layer-7">
+        <div class="layer-header">🚀 Transport (ADR-001..008)</div>
+        <div class="layer-content">
+          <div class="principle">
+            <strong>ADR-001: Gossip > DHT</strong>
+            <div class="mapping">→ brak globalnego indeksu OES</div>
+          </div>
+          <div class="principle">
+            <strong>ADR-004: UDP:6024 + HTTP:8024</strong>
+            <div class="mapping">→ P2P (UDP) + API (HTTP)</div>
+          </div>
+          <div class="principle">
+            <strong>ADR-008: Swarm routing</strong>
+            <div class="mapping">→ feromony · probabilistyczny · bez mapy</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Flow: User Experience -->
+    <div class="flow-section">
+      <h2 class="flow-title">🎯 Przepływ w OES (How it works)</h2>
+      <div class="flow-steps">
+        <div class="step">
+          <strong>1. Rozmowa</strong>
+          <div class="step-sub">Użytkownik opisuje rzeczywistość w czacie</div>
+        </div>
+        <div class="step">
+          <strong>2. Pytania OES</strong>
+          <div class="step-sub">AI-D copilot pyta o byty, relacje, stany</div>
+        </div>
+        <div class="step">
+          <strong>3. Ontologia</strong>
+          <div class="step-sub">Elementy mapują do SEE-MG (A/S/E/R/O/M)</div>
+        </div>
+        <div class="step">
+          <strong>4. Graf</strong>
+          <div class="step-sub">JSON-LD koła + strzałki (wizualizacja)</div>
+        </div>
+        <div class="step">
+          <strong>5. Runtime</strong>
+          <div class="step-sub">Kliknięcie [START] → System żyje (SSR)</div>
+        </div>
+        <div class="step">
+          <strong>6. Autonomia</strong>
+          <div class="step-sub">Byty mogą być autonomiczne (LLM+cele)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mapping Table -->
+    <div class="table-wrapper">
+      <h2 style="margin-bottom: 1.5rem; color: #1a365d;">📊 Szczegółowe mapowanie</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>CONSTITUTION</th>
+            <th>Zasada</th>
+            <th>→ OES Implementacja</th>
+            <th>UI Komponent</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="badge badge-law">Law</span></td>
+            <td>Człowiek = pierwotny</td>
+            <td>Każdy byt modeluje ludzi lub działania</td>
+            <td>Avatar + profil</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-law">Law</span></td>
+            <td>Offline-first</td>
+            <td>Edycja grafa bez internetu · sync po powrocie</td>
+            <td>Indicator online/offline</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-arch">Arch</span></td>
+            <td>D-1: Brak centrum</td>
+            <td>Każdy OES node autonomiczny</td>
+            <td>Peer-to-peer sync</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-arch">Arch</span></td>
+            <td>SW-3: Decay informacji</td>
+            <td>Sugestie OES starszą → mniej ważne</td>
+            <td>Opacity · refresh button</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-impl">Impl</span></td>
+            <td>R-2: Profile + decay</td>
+            <td>Typ relacji określa wygasanie</td>
+            <td>Dropdown: rodzinna/biznesowa/...</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-impl">Impl</span></td>
+            <td>O-7: Blind scoring</td>
+            <td>Wagi prywatne · routing publiczny</td>
+            <td>Trust slider (lokalny)</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-ai">AI</span></td>
+            <td>AI-2: Człowiek zatwierdza</td>
+            <td>AI sugeruje → button [Dodaj] [Połącz]</td>
+            <td>Approve/reject buttons</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-ai">AI</span></td>
+            <td>AI-1: Lokalne AI w węźle</td>
+            <td>Gemma (LLM) lokalnie · nie API</td>
+            <td>Chat box + Suggestions</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Validation Checklist -->
+    <div class="flow-section">
+      <h2 class="flow-title">✅ Test implementacji OES</h2>
+      <div class="grid-2">
+        <div>
+          <strong style="color: #1a365d;">Zasady CONSTITUTION</strong>
+          <ul style="margin-top: 1rem; margin-left: 1.5rem;">
+            <li>□ Brak centrum · każdy węzeł niezależny</li>
+            <li>□ Offline działa · sync async</li>
+            <li>□ Relacja to byt (nie feature)</li>
+            <li>□ Historia nieusuwalna</li>
+            <li>□ Zaufanie = kontinuum</li>
+          </ul>
+        </div>
+        <div>
+          <strong style="color: #1a365d;">OES Requirements</strong>
+          <ul style="margin-top: 1rem; margin-left: 1.5rem;">
+            <li>□ Chat + AI-D copilot</li>
+            <li>□ Canvas (SVG graf)</li>
+            <li>□ Inspector (edycja)</li>
+            <li>□ Formularze (SEE-MG)</li>
+            <li>□ Runtime (SSR engine)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <p>
+        KST v0.1.0 · Ekstrakt z CONSTITUTION v0.3.3 dla OES<br>
+        <small>Dokument założycielski · Mapowanie zasad na funkcjonalność · 2025-06-07</small>
+      </p>
+    </footer>
+  </div>
+</body>
+</html>

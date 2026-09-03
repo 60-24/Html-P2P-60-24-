@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="author" content="Claude (AI) + Tomek">
+  <meta name="date" content="2026-07-12">
+  <meta name="title" content="P2P 60-24 OneClick Evo — Documentation Dashboard">
+  <title>P2P 60-24 Documentation Dashboard</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #1e1e2e 0%, #2d2d44 100%);
+      color: #e0e0e0;
+      line-height: 1.6;
+      padding: 20px;
+      min-height: 100vh;
+    }
+    
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    
+    header {
+      background: rgba(0, 0, 0, 0.3);
+      border-bottom: 3px solid #00d4ff;
+      padding: 30px;
+      margin-bottom: 30px;
+      border-radius: 8px;
+    }
+    
+    h1 {
+      font-size: 2.5em;
+      color: #00d4ff;
+      margin-bottom: 10px;
+    }
+    
+    .subtitle {
+      color: #888;
+      font-size: 1.1em;
+    }
+    
+    .metadata {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #444;
+    }
+    
+    .meta-item {
+      background: rgba(0, 212, 255, 0.1);
+      padding: 12px;
+      border-radius: 4px;
+      border-left: 3px solid #00d4ff;
+    }
+    
+    .meta-label {
+      color: #00d4ff;
+      font-weight: bold;
+      font-size: 0.9em;
+    }
+    
+    .meta-value {
+      margin-top: 5px;
+      color: #e0e0e0;
+    }
+    
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+    }
+    
+    .tab-btn {
+      background: rgba(0, 0, 0, 0.2);
+      border: 2px solid #444;
+      color: #e0e0e0;
+      padding: 12px 24px;
+      cursor: pointer;
+      border-radius: 4px;
+      font-size: 1em;
+      transition: all 0.3s;
+    }
+    
+    .tab-btn:hover {
+      border-color: #00d4ff;
+      background: rgba(0, 212, 255, 0.1);
+    }
+    
+    .tab-btn.active {
+      background: #00d4ff;
+      color: #1e1e2e;
+      border-color: #00d4ff;
+    }
+    
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.3s;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    .doc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+    }
+    
+    .doc-card {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid #444;
+      padding: 20px;
+      border-radius: 8px;
+      transition: all 0.3s;
+      cursor: pointer;
+    }
+    
+    .doc-card:hover {
+      border-color: #00d4ff;
+      background: rgba(0, 212, 255, 0.05);
+      transform: translateY(-3px);
+    }
+    
+    .doc-card h3 {
+      color: #00d4ff;
+      margin-bottom: 10px;
+      font-size: 1.3em;
+    }
+    
+    .doc-card p {
+      color: #aaa;
+      margin-bottom: 15px;
+    }
+    
+    .doc-status {
+      display: inline-block;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 0.85em;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    
+    .status-active {
+      background: rgba(0, 255, 100, 0.2);
+      color: #00ff64;
+    }
+    
+    .status-review {
+      background: rgba(255, 200, 0, 0.2);
+      color: #ffc800;
+    }
+    
+    .status-approved {
+      background: rgba(0, 150, 255, 0.2);
+      color: #0096ff;
+    }
+    
+    .status-sketch {
+      background: rgba(200, 100, 255, 0.2);
+      color: #c864ff;
+    }
+    
+    .adr-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    
+    .adr-table th {
+      background: rgba(0, 212, 255, 0.1);
+      border: 1px solid #444;
+      padding: 12px;
+      text-align: left;
+      color: #00d4ff;
+      font-weight: bold;
+    }
+    
+    .adr-table td {
+      border: 1px solid #444;
+      padding: 12px;
+    }
+    
+    .adr-table tr:nth-child(even) {
+      background: rgba(0, 0, 0, 0.1);
+    }
+    
+    .adr-table tr:hover {
+      background: rgba(0, 212, 255, 0.05);
+    }
+    
+    .axiom-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
+    
+    .axiom-card {
+      background: rgba(0, 0, 0, 0.4);
+      border-left: 4px solid #00d4ff;
+      padding: 15px;
+      border-radius: 4px;
+    }
+    
+    .axiom-title {
+      color: #00d4ff;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+    
+    .axiom-desc {
+      color: #aaa;
+      font-size: 0.9em;
+    }
+    
+    footer {
+      margin-top: 50px;
+      padding: 20px;
+      border-top: 1px solid #444;
+      text-align: center;
+      color: #666;
+      font-size: 0.9em;
+    }
+    
+    .phase-list {
+      list-style: none;
+    }
+    
+    .phase-list li {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 15px;
+      margin-bottom: 10px;
+      border-left: 4px solid #00d4ff;
+      border-radius: 4px;
+    }
+    
+    .phase-num {
+      color: #00d4ff;
+      font-weight: bold;
+      margin-right: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🚀 P2P 60-24 OneClick Evo</h1>
+      <p class="subtitle">Distributed, Modular, Task-Oriented P2P System</p>
+      
+      <div class="metadata">
+        <div class="meta-item">
+          <div class="meta-label">Generated</div>
+          <div class="meta-value">2026-07-12</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Author</div>
+          <div class="meta-value">Claude (AI) + Tomek</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Status</div>
+          <div class="meta-value">✅ Design-First Phase</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Bootstrap Version</div>
+          <div class="meta-value">v0.2</div>
+        </div>
+      </div>
+    </header>
+    
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('overview')">📋 Overview</button>
+      <button class="tab-btn" onclick="switchTab('docs')">📚 Documentation</button>
+      <button class="tab-btn" onclick="switchTab('axioms')">⚙️ Axioms</button>
+      <button class="tab-btn" onclick="switchTab('adrs')">🔬 ADRs</button>
+      <button class="tab-btn" onclick="switchTab('architecture')">🏗️ Architecture</button>
+    </div>
+    
+    <!-- TAB: Overview -->
+    <div id="overview" class="tab-content active">
+      <h2 style="color: #00d4ff; margin-bottom: 20px;">Project Overview</h2>
+      
+      <div style="background: rgba(0, 0, 0, 0.3); padding: 20px; border-radius: 8px; border-left: 4px solid #00d4ff; margin-bottom: 20px;">
+        <h3 style="color: #00d4ff; margin-bottom: 10px;">Core Concept</h3>
+        <p>P2P 60-24 is a <strong>decentralized, modular P2P system</strong> governed by a formal Constitution (v0.4.0) and Architecture Decision Records (ADRs).</p>
+        <p style="margin-top: 10px;">Key innovation: <strong>Task-Oriented Ontology (ADR-012)</strong> — Tasks are atomic, immutable units of work; Agents are fungible executors; no centralized orchestrator.</p>
+      </div>
+      
+      <div style="background: rgba(0, 0, 0, 0.3); padding: 20px; border-radius: 8px; border-left: 4px solid #ffc800; margin-bottom: 20px;">
+        <h3 style="color: #ffc800; margin-bottom: 10px;">Current Status (v0.2 Bootstrap)</h3>
+        <ul style="list-style: none; padding: 0;">
+          <li>✅ <strong>00–13 Documentation Files</strong> (skeleton)</li>
+          <li>✅ <strong>12 ADRs</strong> (ADR-001, ADR-002, ADR-009–ADR-013)</li>
+          <li>✅ <strong>10 Prime Axioms</strong> (A1–A10)</li>
+          <li>🔄 <strong>Module Specifications</strong> (TBD)</li>
+          <li>📋 <strong>Code Phase</strong> (blocked until Module Specs approved)</li>
+        </ul>
+      </div>
+      
+      <div style="background: rgba(0, 0, 0, 0.3); padding: 20px; border-radius: 8px; border-left: 4px solid #00ff64; margin-bottom: 20px;">
+        <h3 style="color: #00ff64; margin-bottom: 10px;">Readiness Checklist</h3>
+        <ul style="list-style: none; padding: 0;">
+          <li>✅ Ontology (6D axes, 7 Entity types)</li>
+          <li>✅ Constitution (OmniKernel, RealBond, Roles)</li>
+          <li>✅ Prime Axioms + Conflict Resolution Rule</li>
+          <li>✅ MiniKernel Architecture (Phase 1–6)</li>
+          <li>✅ AAOS Workflow (Analysis, Architecture, Operations, Simulation)</li>
+          <li>🔄 Module Specifications (8–10 modules)</li>
+          <li>🔄 API Contracts (RPC, Events)</li>
+          <li>🔄 Test Strategy (Unit, Integration, E2E, Byzantine)</li>
+        </ul>
+      </div>
+    </div>
+    
+    <!-- TAB: Documentation -->
+    <div id="docs" class="tab-content">
+      <h2 style="color: #00d4ff; margin-bottom: 20px;">Documentation (13 Files)</h2>
+      
+      <div class="doc-grid">
+        <div class="doc-card">
+          <span class="doc-status status-active">Active</span>
+          <h3>00 — SESSION BOOTSTRAP</h3>
+          <p>Główny dokument startowy. Minimalna ontologia, cel, metodologia AAOS.</p>
+          <small>→ Załaduj zawsze na początku sesji</small>
+        </div>
+        
+        <div class="doc-card">
+          <span class="doc-status status-approved">Approved</span>
+          <h3>01 — PRIME AXIOMS</h3>
+          <p>Dziesięć fundamentalnych zasad (A1–A10) + reguła rozstrzygania konfliktów.</p>
+          <small>→ Globalna spójność > lokalna autonomia</small>
+        </div>
+        
+        <div class="doc-card">
+          <span class="doc-status status-active">Active</span>
+          <h3>02 — ONTOLOGY</h3>
+          <p>Formalna taksonomia: Entity, Relation, Operation; 6D axes; State machine.</p>
+          <small>→ Lingua franca systemu</small>
+        </div>
+        
+        <div class="doc-card">
+          <span class="doc-status status-active">Active</span>
+          <h3>03 — SEE-MG DETAILS</h3>
+          <p>Szczegóły każdego elementu SEE-MG (State, Event, Expression, Memory, Agent, Relation, Object, Goal, Emergencja).</p>
+          <small>→ Supło między ontologią a architekturą</small>
+        </div>
+        
+        <div class="doc-card">
+          <span class="doc-status status-approved">Approved</span>
+          <h3>04 — CONSTITUTION</h3>
+          <p>Streszczenie CONSTITUTION v0.4.0: OmniKernel, RealBond, Role, Lifecycle, Category (1–5).</p>
+          <small>→ System bylaws</small>
+        </div>
+        
+        <div class="doc-card">
+          <span class="doc-status status-active">Active</span>
+          <h3>05 — AAOS</h3>
+          <p>Cztery role projektu: Analysis, Architecture, Operations, Simulation. Interakcje, workflow.</p>
+          <small>→ Kto robi co?</small>
+        </div>
+        
+        <div class="doc-card">
+          <span class="doc-status status-active">Active</span>
+          <h3>06 — ARCHITECTURE</h3>
+          <p>MiniKernel (5 core serwisów), sześć faz budowy (Phase 1–6), komponenty, roadmap.</p>
+          <small>→ Design-first workflow</small>
+        </div>
+        
+        <div class="doc-card">
+          <span class="doc-status status-active">Active</span>
+          <h3>07 — MODULE SPECIFICATION</h3>
+          <p>Standardowy kontrakt każdego modułu: Purpose, Inputs, Outputs, Events, API, Dependencies, Constraints, Tests.</p>
+          <small>→ Template obowiązkowy</small>
+        </div>
+        
+        <div class="doc-card">
+          <span class="doc-status status-active">Active</span>
+          <h3>08 — API</h3>
+          <p>JSON-RPC 2.0 standard, naming convention, Event schema, Transport (UDP:6024).</p>
+          <small>→ Interfejsy między modułami</small>
+        </div>
+        
+        <div class="doc-card">
+          <span class="doc-status status-active">Active</span>
+          <h3>09 — DATA MODEL</h3>
+          <p>JSON schemas dla głównych Entity: Agent, Task, Group, Context, Need, Offer, Event, Memory Atom, Signal.</p>
+          <small>→ Struktura danych</small>
+        </div>
+        
+        <div class="doc-card">
+          <span class="doc-status status-active">Active</span>
+          <h3>10 — TEST STRATEGY</h3>
+          <p>Unit, Integration, E2E, Property-based, Load, Byzantine testing. Pyramid. CI/CD pipeline.</p>
+          <small>→ Zero code bez testów</small>
+        </div>
+        
+        <div class="doc-card">
+          <span class="doc-status status-active">Active</span>
+          <h3>11 — GLOSSARY</h3>
+          <p>Słownik pojęć (polski/angielski), akronimy (ADR, AAOS), definicje.</p>
+          <small>→ Wspólny język</small>
+        </div>
+        
+        <div class="doc-card">
+          <span class="doc-status status-active">Active</span>
+          <h3>12 — ADR INDEX</h3>
+          <p>Indeks wszystkich Architecture Decision Records (ADR-001–015), status, zależności, konflikt-check.</p>
+          <small>→ Decyzje są immutable</small>
+        </div>
+        
+        <div class="doc-card">
+          <span class="doc-status status-active">Active</span>
+          <h3>13 — AI COLLABORATION PROTOCOL</h3>
+          <p>Protokół współpracy między różnymi modelami AI (Claude, ChatGPT, Codex, Gemini). Format zadań, artefaktów, handoff.</p>
+          <small>→ Ujednolicony workflow</small>
+        </div>
+      </div>
+    </div>
+    
+    <!-- TAB: Axioms -->
+    <div id="axioms" class="tab-content">
+      <h2 style="color: #00d4ff; margin-bottom: 20px;">Prime Axioms (A1–A10)</h2>
+      
+      <div class="axiom-grid">
+        <div class="axiom-card">
+          <div class="axiom-title">A1 — Identity</div>
+          <div class="axiom-desc">Każda Entity ma unikatową, kryptograficznie weryfikowalną tożsamość (Ed25519).</div>
+        </div>
+        
+        <div class="axiom-card">
+          <div class="axiom-title">A2 — Consistency</div>
+          <div class="axiom-desc">Niezmienniki nigdy nie mogą być naruszane. Global consistency > local autonomy.</div>
+        </div>
+        
+        <div class="axiom-card">
+          <div class="axiom-title">A3 — Adaptation</div>
+          <div class="axiom-desc">System uczy się z doświadczenia (Memory, Reputation). Nie sztywny.</div>
+        </div>
+        
+        <div class="axiom-card">
+          <div class="axiom-title">A4 — Diversity</div>
+          <div class="axiom-desc">System toleruje wielość podejść do tego samego problemu (o ile tą samą ontologią).</div>
+        </div>
+        
+        <div class="axiom-card">
+          <div class="axiom-title">A5 — Evolution</div>
+          <div class="axiom-desc">System ewoluuje bez przerwania usługi (Deprecation ≥ 3 epochs).</div>
+        </div>
+        
+        <div class="axiom-card">
+          <div class="axiom-title">A6 — Local Autonomy</div>
+          <div class="axiom-desc">Każdy moduł ma prawo do lokalnej decyzji w swoim Bounded Context.</div>
+        </div>
+        
+        <div class="axiom-card">
+          <div class="axiom-title">A7 — Cooperation</div>
+          <div class="axiom-desc">Agenty współpracują dobrowolnie. Nagradzane (Trust ↑), kary za defection.</div>
+        </div>
+        
+        <div class="axiom-card">
+          <div class="axiom-title">A8 — Observability</div>
+          <div class="axiom-desc">Każdy stan, event, decision musi być loggowany i queryowalny (EventBus).</div>
+        </div>
+        
+        <div class="axiom-card">
+          <div class="axiom-title">A9 — Reversibility</div>
+          <div class="axiom-desc">Każda decyzja musi być reversible (rollback) lub auditowalna (EventBus).</div>
+        </div>
+        
+        <div class="axiom-card">
+          <div class="axiom-title">A10 — Minimal Complexity</div>
+          <div class="axiom-desc">Dodaj Feature/Module tylko jeśli rozwiązuje konkretny problem.</div>
+        </div>
+      </div>
+      
+      <div style="background: rgba(0, 212, 255, 0.1); padding: 20px; border-radius: 8px; margin-top: 30px; border-left: 4px solid #00d4ff;">
+        <h3 style="color: #00d4ff; margin-bottom: 10px;">⚡ Reguła Rozstrzygania Konfliktów</h3>
+        <p><strong>Global Consistency (A2, A8, A9, A10) > Local Autonomy (A6)</strong></p>
+        <p style="margin-top: 10px; color: #aaa;">Chyba że architektura jawnie definiuje granice autonomii (Bounded Context). Dzięki temu moduły działają niezależnie, ale nie mogą naruszać niezmienników systemu.</p>
+      </div>
+    </div>
+    
+    <!-- TAB: ADRs -->
+    <div id="adrs" class="tab-content">
+      <h2 style="color: #00d4ff; margin-bottom: 20px;">Architecture Decision Records (ADRs)</h2>
+      
+      <table class="adr-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Tytuł</th>
+            <th>Status</th>
+            <th>Date</th>
+            <th>Related Axiom</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>ADR-001</strong></td>
+            <td>Identity format (Ed25519)</td>
+            <td><span style="color: #0096ff;">✅ Approved</span></td>
+            <td>2026-06-15</td>
+            <td>A1</td>
+          </tr>
+          <tr>
+            <td><strong>ADR-002</strong></td>
+            <td>Transport (UDP:6024)</td>
+            <td><span style="color: #0096ff;">✅ Approved</span></td>
+            <td>2026-06-20</td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td><strong>ADR-003</strong></td>
+            <td>EventBus schema & quorum</td>
+            <td><span style="color: #ffc800;">🔄 Review</span></td>
+            <td>2026-07-10</td>
+            <td>A2, A8, A9</td>
+          </tr>
+          <tr>
+            <td><strong>ADR-004</strong></td>
+            <td>State store (versioning)</td>
+            <td><span style="color: #ffc800;">🔄 Review</span></td>
+            <td>2026-07-10</td>
+            <td>A2, A8</td>
+          </tr>
+          <tr>
+            <td><strong>ADR-009</strong></td>
+            <td>Context entity & lifecycle</td>
+            <td><span style="color: #0096ff;">✅ Approved</span></td>
+            <td>2026-06-30</td>
+            <td>A3, A5, A6</td>
+          </tr>
+          <tr>
+            <td><strong>ADR-010</strong></td>
+            <td>Group entity, Dunbar, quorum</td>
+            <td><span style="color: #0096ff;">✅ Approved</span></td>
+            <td>2026-07-05</td>
+            <td>A6, A7</td>
+          </tr>
+          <tr>
+            <td><strong>ADR-011</strong></td>
+            <td>Need+Offer matching, Reputation</td>
+            <td><span style="color: #0096ff;">✅ Approved</span></td>
+            <td>2026-07-08</td>
+            <td>A3, A4, A7</td>
+          </tr>
+          <tr>
+            <td><strong>ADR-012</strong></td>
+            <td>Task-Oriented Ontology (TOO)</td>
+            <td><span style="color: #0096ff;">✅ Approved</span></td>
+            <td>2026-07-12</td>
+            <td>A1, A2</td>
+          </tr>
+          <tr>
+            <td><strong>ADR-013</strong></td>
+            <td>Cognitive State Layer (CSL)</td>
+            <td><span style="color: #c864ff;">📋 Proposed</span></td>
+            <td>2026-07-12</td>
+            <td>A2, A8</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    
+    <!-- TAB: Architecture -->
+    <div id="architecture" class="tab-content">
+      <h2 style="color: #00d4ff; margin-bottom: 20px;">MiniKernel & Build Phases</h2>
+      
+      <div style="background: rgba(0, 0, 0, 0.3); padding: 20px; border-radius: 8px; border-left: 4px solid #00d4ff; margin-bottom: 20px;">
+        <h3 style="color: #00d4ff; margin-bottom: 15px;">MiniKernel (5 Core Services)</h3>
+        <ul style="list-style: none; padding: 0;">
+          <li style="padding: 10px; background: rgba(0, 0, 0, 0.2); margin-bottom: 8px; border-left: 3px solid #00ff64;">
+            <strong style="color: #00ff64;">Identity</strong> — Ed25519 pubkey management, signing (✅ ADR-001)
+          </li>
+          <li style="padding: 10px; background: rgba(0, 0, 0, 0.2); margin-bottom: 8px; border-left: 3px solid #00ff64;">
+            <strong style="color: #00ff64;">Transport</strong> — UDP:6024 P2P mesh (✅ ADR-002)
+          </li>
+          <li style="padding: 10px; background: rgba(0, 0, 0, 0.2); margin-bottom: 8px; border-left: 3px solid #ffc800;">
+            <strong style="color: #ffc800;">EventBus</strong> — Immutable log, quorum signing (🔄 ADR-003)
+          </li>
+          <li style="padding: 10px; background: rgba(0, 0, 0, 0.2); margin-bottom: 8px; border-left: 3px solid #ffc800;">
+            <strong style="color: #ffc800;">State Store</strong> — Versioned snapshots, queryable (🔄 ADR-004)
+          </li>
+          <li style="padding: 10px; background: rgba(0, 0, 0, 0.2); border-left: 3px solid #c864ff;">
+            <strong style="color: #c864ff;">ModuleLoader</strong> — Hot-reload (📋 ADR-005)
+          </li>
+        </ul>
+      </div>
+      
+      <div style="background: rgba(0, 0, 0, 0.3); padding: 20px; border-radius: 8px;">
+        <h3 style="color: #00d4ff; margin-bottom: 15px;">Six Build Phases</h3>
+        <ul class="phase-list">
+          <li>
+            <span class="phase-num">Phase 1:</span> <strong>MiniKernel</strong> (2–4 weeks)
+            <div style="color: #aaa; margin-top: 5px;">Single-node binary. Identity, Transport, local EventBus, State.</div>
+          </li>
+          <li>
+            <span class="phase-num">Phase 2:</span> <strong>Distributed Memory</strong> (3–6 weeks)
+            <div style="color: #aaa; margin-top: 5px;">Replicated state, 3f+1 quorum, Byzantine FT, gossip protocol.</div>
+          </li>
+          <li>
+            <span class="phase-num">Phase 3:</span> <strong>Agent Runtime</strong> (4–8 weeks)
+            <div style="color: #aaa; margin-top: 5px;">Task scheduling, Result submission, Memory extraction, Reputation.</div>
+          </li>
+          <li>
+            <span class="phase-num">Phase 4:</span> <strong>Model Runtime</strong> (4–8 weeks)
+            <div style="color: #aaa; margin-top: 5px;">LLM integration (Claude, GPT), prompt templates, output validation.</div>
+          </li>
+          <li>
+            <span class="phase-num">Phase 5:</span> <strong>Reputation & Economy</strong> (6–10 weeks)
+            <div style="color: #aaa; margin-top: 5px;">Token allocation, slashing, auction (Need ↔ Offer pricing).</div>
+          </li>
+          <li>
+            <span class="phase-num">Phase 6:</span> <strong>OneClick Package Builder</strong> (2–4 weeks)
+            <div style="color: #aaa; margin-top: 5px;">Docker, Web dashboard, CLI, cloud deployment.</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  
+  <footer>
+    <p>P2P 60-24 OneClick Evo | Generated 2026-07-12 | Bootstrap v0.2</p>
+    <p>Documentation: <strong>13 files</strong> | ADRs: <strong>9 approved + 4 pending</strong> | Axioms: <strong>10</strong></p>
+  </footer>
+  
+  <script>
+    function switchTab(tabName) {
+      // Hide all tab contents
+      const contents = document.querySelectorAll('.tab-content');
+      contents.forEach(content => content.classList.remove('active'));
+      
+      // Remove active class from all buttons
+      const buttons = document.querySelectorAll('.tab-btn');
+      buttons.forEach(btn => btn.classList.remove('active'));
+      
+      // Show selected tab content
+      document.getElementById(tabName).classList.add('active');
+      
+      // Add active class to clicked button
+      event.target.classList.add('active');
+    }
+  </script>
+</body>
+</html>

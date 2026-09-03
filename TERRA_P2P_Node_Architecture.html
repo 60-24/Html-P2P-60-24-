@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TERRA OS Core — P2P Node Architecture</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Monaco', 'Menlo', monospace;
+            background: linear-gradient(135deg, #0f1419 0%, #1a1f2e 100%);
+            color: #e0e6ed;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: rgba(20, 25, 40, 0.8);
+            border: 1px solid #2a3f5f;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+        .header {
+            background: linear-gradient(90deg, #1a3a52 0%, #0f2847 100%);
+            padding: 30px;
+            border-bottom: 2px solid #2a5a8a;
+        }
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+            color: #5fb3ff;
+        }
+        .header p {
+            color: #a0b8d4;
+            font-size: 14px;
+        }
+        .content {
+            padding: 30px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+        .section {
+            background: rgba(30, 40, 60, 0.6);
+            border: 1px solid #2a4f7f;
+            border-radius: 6px;
+            padding: 20px;
+        }
+        .section h2 {
+            color: #5fb3ff;
+            font-size: 18px;
+            margin-bottom: 16px;
+            border-bottom: 1px solid #2a4f7f;
+            padding-bottom: 10px;
+        }
+        .section h3 {
+            color: #7ecbff;
+            font-size: 14px;
+            margin-top: 14px;
+            margin-bottom: 8px;
+        }
+        .diagram-box {
+            background: rgba(15, 25, 45, 0.7);
+            border: 1px dashed #2a5a8a;
+            border-radius: 4px;
+            padding: 16px;
+            margin-bottom: 16px;
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        svg {
+            width: 100%;
+            height: auto;
+        }
+        .code-block {
+            background: rgba(10, 15, 30, 0.9);
+            border-left: 3px solid #5fb3ff;
+            border-radius: 4px;
+            padding: 14px;
+            font-size: 11px;
+            line-height: 1.5;
+            overflow-x: auto;
+            margin-top: 8px;
+            color: #90ee90;
+        }
+        .code-block pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .flow-item {
+            background: rgba(20, 30, 50, 0.7);
+            border-left: 2px solid #5fb3ff;
+            padding: 10px 14px;
+            margin: 8px 0;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+        .flow-item .label {
+            color: #7ecbff;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+        .flow-item .desc {
+            color: #a0b8d4;
+            font-size: 11px;
+        }
+        .full-width {
+            grid-column: 1 / -1;
+        }
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+            border-bottom: 1px solid #2a4f7f;
+        }
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: #a0b8d4;
+            cursor: pointer;
+            padding: 8px 14px;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            font-family: inherit;
+            font-size: 12px;
+        }
+        .tab-btn.active {
+            color: #5fb3ff;
+            border-bottom-color: #5fb3ff;
+        }
+        .tab-btn:hover {
+            color: #7ecbff;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .legend {
+            font-size: 11px;
+            color: #a0b8d4;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #2a4f7f;
+        }
+        .legend-item {
+            display: inline-block;
+            margin-right: 16px;
+            margin-top: 4px;
+        }
+        .color-dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 2px;
+            margin-right: 4px;
+        }
+        @media (max-width: 1200px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚙️ TERRA OS Core — P2P Node Architecture</h1>
+            <p>OneClick Evo Positiv | Event-State Model | Zdecentralizowany Konsensus</p>
+        </div>
+
+        <div class="content">
+            <!-- SECTION 1: Node Lifecycle -->
+            <div class="section">
+                <h2>1️⃣ Node Lifecycle</h2>
+                <div class="diagram-box">
+                    <svg viewBox="0 0 300 320" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Define styles -->
+                        <defs>
+                            <style>
+                                .state-box { fill: #1a3a52; stroke: #5fb3ff; stroke-width: 2; }
+                                .state-text { fill: #5fb3ff; font-size: 12px; font-weight: bold; }
+                                .arrow { stroke: #7ecbff; stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
+                                .arrow-text { fill: #a0b8d4; font-size: 10px; }
+                            </style>
+                            <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                                <polygon points="0 0, 10 3, 0 6" fill="#7ecbff" />
+                            </marker>
+                        </defs>
+                        
+                        <!-- Boxes -->
+                        <rect class="state-box" x="75" y="20" width="150" height="40" rx="4"/>
+                        <text class="state-text" x="150" y="47" text-anchor="middle">INIT</text>
+                        
+                        <rect class="state-box" x="75" y="100" width="150" height="40" rx="4"/>
+                        <text class="state-text" x="150" y="127" text-anchor="middle">SYNC</text>
+                        
+                        <rect class="state-box" x="75" y="180" width="150" height="40" rx="4"/>
+                        <text class="state-text" x="150" y="207" text-anchor="middle">READY</text>
+                        
+                        <rect class="state-box" x="75" y="260" width="150" height="40" rx="4"/>
+                        <text class="state-text" x="150" y="287" text-anchor="middle">EVENT LOOP</text>
+                        
+                        <!-- Arrows -->
+                        <path class="arrow" d="M 150 60 L 150 100"/>
+                        <text class="arrow-text" x="155" y="83">load config,\nkeys</text>
+                        
+                        <path class="arrow" d="M 150 140 L 150 180"/>
+                        <text class="arrow-text" x="155" y="163">fetch state\nfrom peers</text>
+                        
+                        <path class="arrow" d="M 150 220 L 150 260"/>
+                        <text class="arrow-text" x="155" y="243">consensus\nachieved</text>
+                    </svg>
+                </div>
+                <div class="legend">
+                    <div class="legend-item">
+                        <span class="color-dot" style="background: #1a3a52; border: 1px solid #5fb3ff;"></span>
+                        Faza node'a
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 2: Event Flow (P2P) -->
+            <div class="section">
+                <h2>2️⃣ Event Flow (Distributed)</h2>
+                <div class="flow-item">
+                    <div class="label">Local Event</div>
+                    <div class="desc">Użytkownik/system generuje event → State Store (synchronicznie)</div>
+                </div>
+                <div class="flow-item">
+                    <div class="label">Intent Resolver</div>
+                    <div class="desc">Mapuje intent → action validators → decyzja lokalna</div>
+                </div>
+                <div class="flow-item">
+                    <div class="label">Gossip Broadcast</div>
+                    <div class="desc">UDP 6024 → sąsiednie node'y (signed: ed25519)</div>
+                </div>
+                <div class="flow-item">
+                    <div class="label">Consensus Round</div>
+                    <div class="desc">Każdy node: verify sig → apply state → odpowiedź ACCEPT/REJECT</div>
+                </div>
+                <div class="flow-item">
+                    <div class="label">Replicated State</div>
+                    <div class="desc">Memory Graph (BadgerDB) → zapisany, wysyłane dalej</div>
+                </div>
+            </div>
+
+            <!-- SECTION 3: Memory Graph Model -->
+            <div class="section">
+                <h2>3️⃣ Memory Graph (CRDT)</h2>
+                <div class="diagram-box">
+                    <svg viewBox="0 0 300 280" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <style>
+                                .node-circle { fill: #1a4a7a; stroke: #5fb3ff; stroke-width: 2; }
+                                .node-text { fill: #5fb3ff; font-size: 11px; font-weight: bold; text-anchor: middle; }
+                                .edge { stroke: #7ecbff; stroke-width: 1.5; fill: none; marker-end: url(#arrowhead2); }
+                                .edge-label { fill: #a0b8d4; font-size: 9px; }
+                                .timestamp { fill: #90ee90; font-size: 9px; }
+                            </style>
+                            <marker id="arrowhead2" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                                <polygon points="0 0, 10 3, 0 6" fill="#7ecbff" />
+                            </marker>
+                        </defs>
+                        
+                        <!-- Nodes (events) -->
+                        <circle class="node-circle" cx="60" cy="40" r="22"/>
+                        <text class="node-text" x="60" y="46">E1</text>
+                        <text class="timestamp" x="60" y="70" text-anchor="middle">t=100ms</text>
+                        
+                        <circle class="node-circle" cx="150" cy="40" r="22"/>
+                        <text class="node-text" x="150" y="46">E2</text>
+                        <text class="timestamp" x="150" y="70" text-anchor="middle">t=102ms</text>
+                        
+                        <circle class="node-circle" cx="240" cy="40" r="22"/>
+                        <text class="node-text" x="240" y="46">E3</text>
+                        <text class="timestamp" x="240" y="70" text-anchor="middle">t=103ms</text>
+                        
+                        <!-- State nodes -->
+                        <rect class="node-circle" x="45" y="130" width="50" height="35" rx="3"/>
+                        <text class="node-text" x="70" y="152">S1</text>
+                        
+                        <rect class="node-circle" x="135" y="130" width="50" height="35" rx="3"/>
+                        <text class="node-text" x="160" y="152">S2</text>
+                        
+                        <rect class="node-circle" x="225" y="130" width="50" height="35" rx="3"/>
+                        <text class="node-text" x="250" y="152">S3</text>
+                        
+                        <!-- Edges -->
+                        <path class="edge" d="M 80 55 L 128 55"/>
+                        <path class="edge" d="M 170 55 L 218 55"/>
+                        
+                        <path class="edge" d="M 70 62 L 70 130"/>
+                        <text class="edge-label" x="75" y="100">apply</text>
+                        
+                        <path class="edge" d="M 160 62 L 160 130"/>
+                        <text class="edge-label" x="165" y="100">apply</text>
+                        
+                        <path class="edge" d="M 250 62 L 250 130"/>
+                        <text class="edge-label" x="255" y="100">apply</text>
+                        
+                        <!-- Replicate edges -->
+                        <path class="edge" d="M 95 147 L 135 147" stroke-dasharray="3,3"/>
+                        <text class="edge-label" x="110" y="143">gossip</text>
+                        
+                        <path class="edge" d="M 185 147 L 225 147" stroke-dasharray="3,3"/>
+                        <text class="edge-label" x="200" y="143">replicate</text>
+                    </svg>
+                </div>
+                <div class="code-block">
+                    <pre>type MemoryNode struct {
+  ID        string    // hash(event)
+  Timestamp int64     // causality
+  Entity    string    // kto/co
+  Action    string    // co się dzieje
+  StateRef  string    // link do S
+  Causality []string  // parent IDs
+  Signature string    // ed25519
+}</pre>
+                </div>
+            </div>
+
+            <!-- SECTION 4: TERRA OS 6-Engine Integration -->
+            <div class="section">
+                <h2>4️⃣ TERRA OS Core (6-Engine)</h2>
+                <div class="flow-item">
+                    <div class="label">TIME Engine</div>
+                    <div class="desc">Lamport Clock / Hybrid Logical Clock → Global ordering</div>
+                </div>
+                <div class="flow-item">
+                    <div class="label">ACTION Engine</div>
+                    <div class="desc">Event Bus dispatcher → services/workflows</div>
+                </div>
+                <div class="flow-item">
+                    <div class="label">SPACE Engine</div>
+                    <div class="desc">Geohash + node topology → neighborhood routing</div>
+                </div>
+                <div class="flow-item">
+                    <div class="label">ENTITY Engine</div>
+                    <div class="desc">DID registry → human/device/system identity</div>
+                </div>
+                <div class="flow-item">
+                    <div class="label">INTENT Engine</div>
+                    <div class="desc">Goal resolver → intent validators → decision tree</div>
+                </div>
+                <div class="flow-item">
+                    <div class="label">STATE Engine</div>
+                    <div class="desc">CRDT + BadgerDB → replicated world state</div>
+                </div>
+            </div>
+
+            <!-- SECTION 5: Go Code Skeleton -->
+            <div class="section full-width">
+                <h2>5️⃣ Go Code Skeleton (MVP Kernel)</h2>
+                
+                <div class="tabs">
+                    <button class="tab-btn active" onclick="switchTab('event-store')">Event Store</button>
+                    <button class="tab-btn" onclick="switchTab('intent-resolver')">Intent Resolver</button>
+                    <button class="tab-btn" onclick="switchTab('gossip')">Gossip Protocol</button>
+                    <button class="tab-btn" onclick="switchTab('state-engine')">State Engine</button>
+                </div>
+
+                <div id="event-store" class="tab-content active">
+                    <div class="code-block">
+                        <pre>package core
+
+import (
+    "crypto/ed25519"
+    "time"
+)
+
+type Event struct {
+    ID        string            `json:"id"`
+    Time      int64             `json:"time"`
+    Action    string            `json:"action"`
+    Entity    string            `json:"entity"`
+    Space     string            `json:"space"`
+    Intent    string            `json:"intent"`
+    Payload   map[string]interface{} `json:"payload"`
+    Signature string            `json:"sig"`
+    CausalityVector []string    `json:"causality"`
+}
+
+type EventBus struct {
+    events chan Event
+    store  *BadgerStore
+    pubKey ed25519.PublicKey
+}
+
+func (eb *EventBus) Emit(e Event) error {
+    // Sign event
+    sig := ed25519.Sign(eb.store.privKey, marshalEvent(e))
+    e.Signature = base64.StdEncoding.EncodeToString(sig)
+    
+    // Store + broadcast
+    eb.store.Put(e.ID, e)
+    eb.events <- e
+    return nil
+}</pre>
+                    </div>
+                </div>
+
+                <div id="intent-resolver" class="tab-content">
+                    <div class="code-block">
+                        <pre>type IntentResolver struct {
+    validators map[string]ValidatorFunc
+}
+
+func (ir *IntentResolver) Resolve(e Event) (Resolution, error) {
+    validator := ir.validators[e.Intent]
+    if validator == nil {
+        return Resolution{}, ErrUnknownIntent
+    }
+    
+    // 1. Validate signature
+    if !VerifySignature(e) {
+        return Resolution{}, ErrBadSignature
+    }
+    
+    // 2. Check causality
+    if !ir.checkCausality(e) {
+        return Resolution{}, ErrBadOrdering
+    }
+    
+    // 3. Run intent logic
+    ok, err := validator(e)
+    return Resolution{OK: ok, Err: err}, err
+}
+
+type Resolution struct {
+    OK   bool
+    Err  error
+    Next map[string]interface{}
+}</pre>
+                    </div>
+                </div>
+
+                <div id="gossip" class="tab-content">
+                    <div class="code-block">
+                        <pre>type GossipNode struct {
+    id       string
+    peers    []string  // peer addresses
+    port     int       // 6024
+    conn     *net.UDPConn
+    eventBus *EventBus
+}
+
+func (gn *GossipNode) BroadcastEvent(e Event) error {
+    data, _ := json.Marshal(e)
+    
+    for _, peer := range gn.peers {
+        addr, _ := net.ResolveUDPAddr("udp", peer)
+        gn.conn.WriteToUDP(data, addr)
+    }
+    return nil
+}
+
+func (gn *GossipNode) ListenForEvents() {
+    buf := make([]byte, 4096)
+    
+    for {
+        n, remoteAddr, _ := gn.conn.ReadFromUDP(buf)
+        var e Event
+        json.Unmarshal(buf[:n], &e)
+        
+        // Verify & merge
+        gn.eventBus.Emit(e)
+        
+        // Forward to other peers (flood with dedup)
+        gn.BroadcastEvent(e)
+    }
+}</pre>
+                    </div>
+                </div>
+
+                <div id="state-engine" class="tab-content">
+                    <div class="code-block">
+                        <pre>type StateEngine struct {
+    db     *badger.DB
+    states map[string]State
+    clock  *LamportClock
+}
+
+type State struct {
+    ID       string
+    Data     map[string]interface{}
+    Version  int64
+    Checksum string
+}
+
+func (se *StateEngine) ApplyEvent(e Event) error {
+    // 1. Increment clock
+    se.clock.Increment()
+    
+    // 2. Create state snapshot
+    prevState := se.states[e.Entity]
+    newState := State{
+        ID:      fmt.Sprintf("s_%s_%d", e.Entity, se.clock.Value()),
+        Data:    applyAction(prevState.Data, e.Action, e.Payload),
+        Version: se.clock.Value(),
+    }
+    
+    // 3. Persist to BadgerDB
+    key := []byte(newState.ID)
+    val, _ := json.Marshal(newState)
+    se.db.Set(key, val)
+    
+    // 4. Update in-memory map
+    se.states[e.Entity] = newState
+    
+    return nil
+}</pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 6: Network Topology -->
+            <div class="section full-width">
+                <h2>6️⃣ Node Topology & Messaging</h2>
+                <div class="diagram-box">
+                    <svg viewBox="0 0 500 300" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <style>
+                                .peer-circle { fill: #1a4a7a; stroke: #5fb3ff; stroke-width: 2; }
+                                .peer-text { fill: #5fb3ff; font-size: 12px; font-weight: bold; text-anchor: middle; }
+                                .mesh-line { stroke: #7ecbff; stroke-width: 1; opacity: 0.5; }
+                                .highlight { stroke: #ffb84d; stroke-width: 2; }
+                                .port-label { fill: #90ee90; font-size: 10px; }
+                            </style>
+                        </defs>
+                        
+                        <!-- Nodes -->
+                        <circle class="peer-circle" cx="100" cy="80" r="25"/>
+                        <text class="peer-text" x="100" y="90">Node1</text>
+                        
+                        <circle class="peer-circle" cx="250" cy="50" r="25"/>
+                        <text class="peer-text" x="250" y="60">Node2</text>
+                        
+                        <circle class="peer-circle" cx="400" cy="80" r="25"/>
+                        <text class="peer-text" x="400" y="90">Node3</text>
+                        
+                        <circle class="peer-circle" cx="150" cy="200" r="25"/>
+                        <text class="peer-text" x="150" y="210">Node4</text>
+                        
+                        <circle class="peer-circle" cx="350" cy="200" r="25"/>
+                        <text class="peer-text" x="350" y="210">Node5</text>
+                        
+                        <!-- Mesh connections -->
+                        <line class="mesh-line" x1="125" y1="100" x2="225" y2="65"/>
+                        <line class="mesh-line" x1="275" y1="65" x2="375" y2="100"/>
+                        <line class="mesh-line" x1="100" y1="105" x2="150" y2="175"/>
+                        <line class="mesh-line" x1="400" y1="105" x2="350" y2="175"/>
+                        <line class="mesh-line" x1="175" y1="200" x2="325" y2="200"/>
+                        
+                        <!-- Port labels -->
+                        <text class="port-label" x="100" y="260">gossip: 6024/UDP</text>
+                        <text class="port-label" x="100" y="278">http: 8024/TCP</text>
+                        <text class="port-label" x="300" y="260">sign: ed25519</text>
+                        <text class="port-label" x="300" y="278">db: BadgerDB</text>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- SECTION 7: Consensus Algorithm -->
+            <div class="section full-width">
+                <h2>7️⃣ Consensus (Byzantine Fault Tolerant)</h2>
+                <div class="flow-item">
+                    <div class="label">1. Propose</div>
+                    <div class="desc">Node A publishes Event → signed, timestamped, causally linked</div>
+                </div>
+                <div class="flow-item">
+                    <div class="label">2. Gossip</div>
+                    <div class="desc">Flood broadcast UDP 6024 → all reachable nodes</div>
+                </div>
+                <div class="flow-item">
+                    <div class="label">3. Validate</div>
+                    <div class="desc">Each node: verify signature, check causality, validate intent</div>
+                </div>
+                <div class="flow-item">
+                    <div class="label">4. Merge</div>
+                    <div class="desc">CRDT merge → state reconciliation (LWW / vector clock)</div>
+                </div>
+                <div class="flow-item">
+                    <div class="label">5. Ack</div>
+                    <div class="desc">Send ACK gossip → propagate acceptance (implicit consensus)</div>
+                </div>
+                <div class="flow-item">
+                    <div class="label">6. Finalize</div>
+                    <div class="desc">Once majority ACKs → state committed to BadgerDB</div>
+                </div>
+            </div>
+
+            <!-- SECTION 8: Critical Design Decisions -->
+            <div class="section full-width">
+                <h2>⚠️ Kluczowe decyzje architektoniczne</h2>
+                <div class="flow-item">
+                    <div class="label">Brak liderów</div>
+                    <div class="desc">Każdy node jest równouprawnionym peer'em — żaden RAFT/leader election</div>
+                </div>
+                <div class="flow-item">
+                    <div class="label">Implicit Consensus</div>
+                    <div class="desc">Konsensus to efekt, nie proces — wynika z verify + flood</div>
+                </div>
+                <div class="flow-item">
+                    <div class="label">Causality First</div>
+                    <div class="desc">Lamport Clock + vector clocks → gwarantowana konsystencja zdarzeń</div>
+                </div>
+                <div class="flow-item">
+                    <div class="label">State = Projection</div>
+                    <div class="desc">State to zawsze projekcja historii zdarzeń — single source of truth = Event Log</div>
+                </div>
+                <div class="flow-item">
+                    <div class="label">Intent-Driven</div>
+                    <div class="desc">Nie "Execute Command" → "Why Execute This" (intent) — każda akcja ma cel</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tabName) {
+            // Hide all tabs
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(c => c.classList.remove('active'));
+            
+            // Remove active from all buttons
+            const buttons = document.querySelectorAll('.tab-btn');
+            buttons.forEach(b => b.classList.remove('active'));
+            
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            
+            // Mark button as active
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>

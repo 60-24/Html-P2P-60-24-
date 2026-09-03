@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interaktywny Pulpit Zrozumienia Konstytucji P2P 60-24</title>
+<style>
+:root {
+  --ink: #07090b;
+  --ink2: #0f1317;
+  --panel: #151a1e;
+  --line: #2a323d;
+  --bone: #f1ebd9;
+  --bone-dim: #a1a8b0;
+  --amber: #e5ad35;
+  --teal: #52c2b4;
+  --red: #d35f52;
+  --serif: 'Iowan Old Style','Palatino Linotype',Georgia,serif;
+  --mono: 'JetBrains Mono','SF Mono',Consolas,monospace;
+}
+
+* { box-sizing: border-box; transition: all 0.2s ease; }
+body {
+  margin: 0; padding: 0;
+  background-color: var(--ink); color: var(--bone);
+  font-family: var(--serif); display: flex; min-height: 100vh;
+}
+
+/* SIDEBAR */
+#sidebar {
+  width: 320px; flex: 0 0 320px; background: var(--ink2);
+  border-right: 1px solid var(--line); padding: 24px;
+  position: sticky; top: 0; height: 100vh; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 20px;
+}
+.brand h1 { font-size: 18px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--amber); margin: 0; }
+.brand .ver { font-family: var(--mono); font-size: 11px; color: var(--bone-dim); }
+
+#search-box {
+  width: 100%; padding: 12px; background: var(--panel);
+  border: 1px solid var(--line); color: var(--bone);
+  border-radius: 6px; font-family: var(--mono); font-size: 13px;
+}
+#search-box:focus { border-color: var(--teal); outline: none; }
+
+.nav-group { display: flex; flex-direction: column; gap: 6px; }
+.nav-title { font-family: var(--mono); font-size: 11px; text-transform: uppercase; color: var(--teal); letter-spacing: 0.05em; margin-top: 10px; }
+.nav-link {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 12px; border-radius: 4px; color: var(--bone-dim);
+  text-decoration: none; font-size: 14px; border-left: 2px solid transparent;
+}
+.nav-link:hover { background: rgba(255,255,255,0.02); color: var(--bone); }
+.nav-link.active { background: rgba(217,164,65,0.08); color: var(--amber); border-left-color: var(--amber); }
+
+/* MAIN CONTENT */
+#workspace { flex: 1; padding: 40px 60px; max-width: 1200px; overflow-y: auto; }
+header { margin-bottom: 40px; border-bottom: 1px solid var(--line); padding-bottom: 20px; }
+header .badge { font-family: var(--mono); font-size: 11px; color: var(--teal); text-transform: uppercase; }
+header h2 { font-size: 36px; margin: 10px 0; font-weight: 600; }
+
+.section-panel {
+  background: var(--panel); border: 1px solid var(--line);
+  border-radius: 8px; padding: 24px; margin-bottom: 30px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+}
+.section-panel h3 { margin-top: 0; font-size: 22px; border-bottom: 1px solid var(--line); padding-bottom: 10px; color: var(--amber); }
+
+/* INTERACTIVE LABS / VISUALIZATIONS */
+.interactive-box {
+  background: rgba(0,0,0,0.2); border: 1px dashed var(--line);
+  border-radius: 6px; padding: 20px; margin: 15px 0; font-family: var(--mono);
+}
+
+/* DAG SIMULATOR */
+.dag-container { display: flex; flex-direction: column; gap: 15px; }
+.dag-nodes { display: flex; justify-content: space-around; flex-wrap: wrap; gap: 15px; margin: 20px 0; }
+.dag-node {
+  background: var(--ink2); border: 2px solid var(--line); padding: 15px;
+  border-radius: 8px; text-align: center; min-width: 140px; cursor: pointer;
+}
+.dag-node.active { border-color: var(--teal); box-shadow: 0 0 10px rgba(82,194,180,0.3); }
+.dag-node.genesis { border-color: var(--amber); }
+.dag-meta { font-size: 11px; color: var(--bone-dim); margin-top: 5px; }
+
+/* CALC BOX */
+.calc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.control-group { display: flex; flex-direction: column; gap: 8px; }
+label { font-size: 12px; color: var(--bone-dim); }
+input[type="range"] { accent-color: var(--teal); width: 100%; }
+.result-display {
+  display: flex; flex-direction: column; justify-content: center;
+  align-items: center; background: var(--ink2); border-radius: 6px; padding: 15px;
+}
+.v-big { font-size: 32px; font-weight: bold; color: var(--teal); }
+.status-badge { padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: bold; }
+.status-pass { background: rgba(82,194,180,0.2); color: var(--teal); }
+.status-fail { background: rgba(213,95,82,0.2); color: var(--red); }
+
+/* BIOLOGY HIERARCHY */
+.bio-tree { display: flex; flex-direction: column; gap: 8px; }
+.bio-row {
+  display: grid; grid-template-columns: 150px 30px 1fr;
+  padding: 10px; background: var(--ink2); border-radius: 4px; align-items: center;
+}
+.bio-row:hover { background: rgba(255,255,255,0.02); }
+.bio-left { color: var(--teal); font-weight: bold; }
+.bio-arrow { color: var(--bone-dim); text-align: center; }
+.bio-right { color: var(--bone); }
+
+/* RULES GRID */
+.rules-list { display: flex; flex-direction: column; gap: 10px; }
+.rule-card {
+  border: 1px solid var(--line); border-radius: 6px; overflow: hidden;
+}
+.rule-header {
+  background: var(--ink2); padding: 12px 16px; display: flex;
+  justify-content: space-between; align-items: center; cursor: pointer;
+}
+.rule-header:hover { background: rgba(255,255,255,0.02); }
+.rule-id { color: var(--teal); font-family: var(--mono); font-size: 13px; margin-right: 10px; }
+.rule-title { font-weight: bold; flex: 1; }
+.rule-content {
+  padding: 16px; font-family: var(--mono); font-size: 13px;
+  background: rgba(0,0,0,0.1); border-top: 1px solid var(--line); display: none;
+  line-height: 1.6; color: #c9c4b7;
+}
+.rule-card.open .rule-content { display: block; }
+.rule-card.open { border-color: var(--amber); }
+
+.quote-block {
+  font-style: italic; color: var(--amber); border-left: 3px solid var(--amber);
+  padding-left: 15px; margin: 20px 0; font-size: 17px;
+}
+
+@media(max-width: 900px) {
+  body { flex-direction: column; }
+  #sidebar { width: 100%; height: auto; position: relative; }
+  #workspace { padding: 20px; }
+  .calc-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<nav id="sidebar">
+  <div class="brand">
+    <h1>Konstytucja Systemu</h1>
+    <div class="ver">v0.3.3 · Laboratorium Interaktywne AI-D</div>
+  </div>
+  
+  <input type="text" id="search-box" placeholder="Szukaj zasady (np. CRDT, R-6, AI)...">
+  
+  <div class="nav-group">
+    <div class="nav-title">Fundament i Architektura</div>
+    <a href="#section-h" class="nav-link"><span>Rozdział 0: Hierarchia Bytów</span></a>
+    <a href="#section-o" class="nav-link"><span>Rozdział 1: OmniKernel</span></a>
+    <a href="#section-dag" class="nav-link"><span>Rozdział 3: Zaufanie jako DAG</span></a>
+  </div>
+  
+  <div class="nav-group">
+    <div class="nav-title">Symulatory i Decyzje</div>
+    <a href="#section-calc" class="nav-link"><span>Laboratorium Quorum i Rozpadu</span></a>
+    <a href="#section-bio" class="nav-link"><span>Rozdział 11: Biologia i Swarm</span></a>
+    <a href="#section-ai" class="nav-link"><span>Rozdział 12: Granice AI</span></a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-title">Zasady Absolutne</div>
+    <a href="#section-rules" class="nav-link"><span>Rdzeń Konstytucyjny (10 Zasad)</span></a>
+  </div>
+</nav>
+
+<main id="workspace">
+  <header>
+    <div class="badge">Ewaluacja Architektury P2P 60-24 OneClick Evo</div>
+    <h2>Mapa Prawdziwego Zrozumienia</h2>
+    <p style="color: var(--bone-dim); font-size: 16px; max-width: 800px; line-height: 1.6;">
+      Kod jest tylko konsekwencją konstytucji. Poniższa makieta pozwala na żywo zasymulować matematyczne, logiczne i biologiczne zależności rządzące systemem.
+    </p>
+  </header>
+
+  <section id="section-h" class="section-panel">
+    <h3>Rozdział 0: Hierarchia Bytów</h3>
+    <p style="font-style: italic; color: var(--bone-dim);">Nienaruszalna kolejność priorytetów rzeczywistości sieciowej:</p>
+    <div class="bio-tree" style="margin-top: 15px;">
+      <div class="bio-row"><div class="bio-left">1. Człowiek</div><div class="bio-arrow">→</div><div class="bio-right">Byt pierwotny, niepowtarzalny, suwerenny. Podstawa wszystkiego.</div></div>
+      <div class="bio-row"><div class="bio-left">2. Relacja</div><div class="bio-arrow">→</div><div class="bio-right">Więź między ludźmi. System nie obsługuje czystych "kont" ani "adresów".</div></div>
+      <div class="bio-row"><div class="bio-left">3. Potrzeba</div><div class="bio-arrow">→</div><div class="bio-right">Cel wymiany: co wnoszę, czego poszukuję w ekosystemie.</div></div>
+      <div class="bio-row"><div class="bio-left">4. Środowisko</div><div class="bio-arrow">→</div><div class="bio-right">Kontekst lokalny: geografia, kultura, czas.</div></div>
+    </div>
+    <div class="quote-block">"Środowisko nie determinuje człowieka. System nie determinuje relacji."</div>
+  </section>
+
+  <section id="section-o" class="section-panel">
+    <h3>Rozdział 1: OmniKernel &amp; Prawa Fizyki</h3>
+    <p style="color: var(--bone-dim);">Pięć pojęć absolutnych, które przechodzą pomyślnie <strong>"Test Grawitacji"</strong> (muszą obowiązywać zawsze i wszędzie):</p>
+    <div class="bio-tree">
+      <div class="bio-row"><div class="bio-left">Identity</div><div class="bio-arrow">·</div><div class="bio-right">Unikalna, niezmienna tożsamość każdego bytu w systemie.</div></div>
+      <div class="bio-row"><div class="bio-left">Trust</div><div class="bio-arrow">·</div><div class="bio-right">Dynamiczne, nie-binarne zaufanie obliczane lokalnie.</div></div>
+      <div class="bio-row"><div class="bio-left">Signal</div><div class="bio-arrow">·</div><div class="bio-right">Zdefiniowany pakiet: Nadawca, Znacznik czasu, Treść (Kwantyzacja).</div></div>
+      <div class="bio-row"><div class="bio-left">State</div><div class="bio-arrow">·</div><div class="bio-right">Historia stanu oparta o log append-only – w pełni nieusuwalna.</div></div>
+      <div class="bio-row"><div class="bio-left">Time</div><div class="bio-arrow">·</div><div class="bio-right">Jednokierunkowa oś zdarzeń determinująca historię sieci.</div></div>
+    </div>
+  </section>
+
+  <section id="section-dag" class="section-panel">
+    <h3>Rozdział 3: Wizualizacja Sieci Zaufania (RealBond DAG)</h3>
+    <p style="color: var(--bone-dim);">Kliknij węzeł, aby zasymulować dziedziczenie odpowiedzialności wzdłuż ścieżki zaproszeń od węzła Genesis. Sieć jest grafem acyklicznym, nie drzewem.</p>
+    
+    <div class="interactive-box dag-container">
+      <div class="dag-nodes">
+        <div class="dag-node genesis" id="node-g" onclick="highlightPath('g')">
+          <strong>Genesis Root</strong>
+          <div class="dag-meta">Depth: 0 (Korzeń)</div>
+        </div>
+        <div class="dag-node" id="node-a" onclick="highlightPath('a')">
+          <strong>Węzeł A</strong>
+          <div class="dag-meta">Zaproszony przez: Genesis</div>
+        </div>
+        <div class="dag-node" id="node-b" onclick="highlightPath('b')">
+          <strong>Węzeł B</strong>
+          <div class="dag-meta">Zaproszony przez: A &amp; G</div>
+        </div>
+        <div class="dag-node" id="node-c" onclick="highlightPath('c')">
+          <strong>Węzeł C (Sybil?)</strong>
+          <div class="dag-meta">Zaproszony przez: B</div>
+        </div>
+      </div>
+      <div id="dag-status" style="font-size: 13px; color: var(--teal); text-align: center;">
+        Kliknij dowolny węzeł, aby zbadać łańcuch poręczeń.
+      </div>
+    </div>
+  </section>
+
+  <section id="section-calc" class="section-panel">
+    <h3>Laboratorium Matematyki Społecznej: Quorum i Decay</h3>
+    <p style="color: var(--bone-dim);">Interaktywna symulacja reguł decyzyjnych oraz automatycznego wygaszania (Decay) profili więzi.</p>
+    
+    <div class="interactive-box calc-grid">
+      <div class="control-group">
+        <h4 style="color:var(--teal); margin:0 0 10px 0;">1. Algorytm Mediacji Quorum (O-6)</h4>
+        
+        <label for="range-n">Liczba osób w Kręgu 1+2 (N): <span id="val-n">10</span></label>
+        <input type="range" id="range-n" min="2" max="50" value="10">
+        
+        <label for="range-za">Głosy ZA (Suma ważona TrustMetric): <span id="val-za">4.5</span></label>
+        <input type="range" id="range-za" min="0" max="15" step="0.1" value="4.5">
+
+        <label for="range-przeciw">Głosy PRZECIW (Suma ważona): <span id="val-przeciw">2.0</span></label>
+        <input type="range" id="range-przeciw" min="0" max="15" step="0.1" value="2.0">
+        
+        <div style="font-size:11px; color:var(--bone-dim); margin-top:5px;">
+          Wymagana większość: Σ(ZA) > Σ(PRZECIW) × 1.5. Skład Quorum wyliczany dynamicznie jako: max(3, min(5, floor(N/2))).
+        </div>
+      </div>
+      
+      <div class="result-display">
+        <div>Wymagany skład sądu: <strong id="res-sklad" style="color:var(--amber);">5 osób</strong></div>
+        <div style="margin: 15px 0; text-align:center;">
+          Wynik proporcji: <br><span id="res-ratio" class="v-big">2.25</span>
+        </div>
+        <span id="res-badge" class="status-badge status-pass">Zatwierdzono (Quorum Sukces)</span>
+      </div>
+    </div>
+
+    <div class="interactive-box calc-grid">
+      <div class="control-group">
+        <h4 style="color:var(--teal); margin:0 0 10px 0;">2. Funkcja Zanikania Relacji (Decay Profile)</h4>
+        <label for="select-profile">Wybierz profil więzi człowieka:</label>
+        <select id="select-profile" style="background: var(--ink2); color: var(--bone); padding: 8px; border: 1px solid var(--line); font-family: var(--mono); width:100%;">
+          <option value="0.001">Rodzinny (Zanikanie bliskie zeru)</option>
+          <option value="0.01">Przyjacielski (Wolny proces zanikania)</option>
+          <option value="0.05">Sąsiedzki (Zależny lokalnie)</option>
+          <option value="0.15" selected>Zawodowy (Szybki zanik bez aktywności)</option>
+          <option value="0.4">Przygodny (Drastyczny spadek wartości)</option>
+        </select>
+
+        <label for="range-days" style="margin-top:10px;">Dni bez interakcji: <span id="val-days">30</span></label>
+        <input type="range" id="range-days" min="0" max="180" value="30">
+      </div>
+
+      <div class="result-display">
+        <div>Początkowy TrustMetric: <strong>1.00</strong></div>
+        <div style="margin: 15px 0; text-align:center;">
+          Bieżący TrustMetric: <br><span id="res-decay-val" class="v-big" style="color:var(--amber);">0.65</span>
+        </div>
+        <div style="font-size:11px; color:var(--bone-dim); text-align:center;">
+          System automatycznie wycisza (Decay). Tylko człowiek decyduje o trwałym zamknięciu relacji.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="section-bio" class="section-panel">
+    <h3>Rozdział 11 &amp; 15: Biologia i Swarm Intelligence</h3>
+    <p style="color: var(--bone-dim);">Mapowanie struktur biologicznych wyewoluowanych przez miliardy lat na komponenty systemu P2P:</p>
+    
+    <div class="bio-tree">
+      <div class="bio-row"><div class="bio-left">Atom / Cząsteczka</div><div class="bio-arrow">→</div><div class="bio-right">OmniKernel (Niezmienne prawa fizyki systemu)</div></div>
+      <div class="bio-row"><div class="bio-left">Komórka</div><div class="bio-arrow">→</div><div class="bio-right">Autonomiczny Moduł kodu (Przechodzi stany S/I/R/E)</div></div>
+      <div class="bio-row"><div class="bio-left">Tkanka / Organ</div><div class="bio-arrow">→</div><div class="bio-right">Klaster modułów realizujących spójną potrzebę</div></div>
+      <div class="bio-row"><div class="bio-left">Organizm</div><div class="bio-arrow">→</div><div class="bio-right">Węzeł P2P (Człowiek kontrolujący swoją instancję, dbający o sen)</div></div>
+      <div class="bio-row"><div class="bio-left">Mózg sieciowy</div><div class="bio-arrow">→</div><div class="bio-right">Sieć połączeń RealBond (Neurony = Węzły, Synapsy = Relacje)</div></div>
+    </div>
+    
+    <p style="color: var(--bone-dim); margin-top:20px;"><strong>Zasada Inteligencji Rojowej (Swarm):</strong> Ślad przydatności modułów zachowuje się jak feromon mrówki – rośnie przy częstym użytkowaniu, zanika samoistnie przy braku aktywności (SW-3).</p>
+  </section>
+
+  <section id="section-ai" class="section-panel">
+    <h3>Rozdział 12: Granice AI &amp; Taksonomia Działań AI-9</h3>
+    <p style="color: var(--bone-dim);">Neuroorkiestrator rezyduje lokalnie w każdym węźle. Obowiązuje restrykcyjne spektrum wykonawcze:</p>
+    
+    <div class="rules-list">
+      <div class="rule-card" style="border-left: 4px solid var(--teal);">
+        <div class="rule-header" onclick="this.parentNode.classList.toggle('open')">
+          <span class="rule-title"><span class="rule-id">Kategoria 1</span>Obserwacja i Sugestia (Zawsze dozwolona)</span>
+          <span style="font-size:12px; color:var(--teal);">ZOBACZ ▾</span>
+        </div>
+        <div class="rule-content">
+          Mierzenie anomalii, analiza opóźnień sieci, automatyczne uzupełnianie danych formularzy, tłumaczenie semantyczne intencji użytkownika. Nie zmienia stanów prawnych ani parametrów zaufania.
+        </div>
+      </div>
+
+      <div class="rule-card" style="border-left: 4px solid var(--amber);">
+        <div class="rule-header" onclick="this.parentNode.classList.toggle('open')">
+          <span class="rule-title"><span class="rule-id">Kategoria 2</span>Wykonanie odwracalne (Z powiadomieniem)</span>
+          <span style="font-size:12px; color:var(--amber);">ZOBACZ ▾</span>
+        </div>
+        <div class="rule-content">
+          Dynamiczne filtrowanie szumu informacyjnego, zmiana kompozycji interfejsu pod stan emocjonalny użytkownika, tymczasowe zawieszenie uciążliwych powiadomień. Użytkownik zachowuje pełne prawo do natychmiastowego cofnięcia operacji.
+        </div>
+      </div>
+
+      <div class="rule-card" style="border-left: 4px solid var(--red);">
+        <div class="rule-header" onclick="this.parentNode.classList.toggle('open')">
+          <span class="rule-title"><span class="rule-id">Kategoria 3</span>Wykonanie nieodwracalne (ZABRONIONE bez podpisu Ed25519)</span>
+          <span style="font-size:12px; color:var(--red);">ZOBACZ ▾</span>
+        </div>
+        <div class="rule-content">
+          Apoptoza (śmierć/usunięcie) modułu, zerwanie więzi RealBond, transfer zobowiązań, arbitralna zmiana parametru TrustStatus, wysłanie krytycznego sygnału w sieć. <br><br>
+          <strong>Twardy bezpiecznik:</strong> Każda z tych akcji wymaga fizycznego zatwierdzenia przez człowieka ("System sugeruje, Człowiek decyduje").
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="section-rules" class="section-panel">
+    <h3>Rozdział 10: 10 Zasad Rdzenia Konstytucyjnego</h3>
+    <p style="color: var(--bone-dim); margin-bottom: 20px;">Główny punkt odniesienia przy rozstrzyganiu sporów architektonicznych (ADR):</p>
+    
+    <div class="rules-list" id="constitutional-rules-container">
+      </div>
+  </section>
+</main>
+
+<script>
+// Dane konstytucyjne do wyszukiwarki i generatora
+const coreRules = [
+  { id: "Zasada 1", title: "Wartość = zobowiązanie, nie abstrakcja", desc: "RealBond rejestruje zdolność do przyszłego działania od konkretnej osoby." },
+  { id: "Zasada 2", title: "Brak instrumentu spekulacyjnego", desc: "Bez tokenów, bez rynku wtórnego, bez wyceny zewnętrznej i spekulacji rynkowej." },
+  { id: "Zasada 3", title: "Tożsamość relacyjna", desc: "Węzeł istnieje w sieci tylko i wyłącznie przez łańcuch zaproszeń i aktywne podpisy relacji." },
+  { id: "Zasada 4", title: "Transfer w obrębie ścieżki zaufania", desc: "Obieg wartości poza zaufanymi strukturami grafu jest kryptograficznie zablokowany." },
+  { id: "Zasada 5", title: "Eskalacja odpowiedzialności", desc: "Poziomy: 0 relacja prywatna -> 1 widoczność w kręgu -> 2 mediacja quorum -> 3 soft ban lokalny." },
+  { id: "Zasada 6", title: "Niezmienna struktura danych", desc: "Zabezpieczona podpisami Ed25519 + niezmienny łańcuch skrótów (hash chain). Historię przeglądasz, nie modyfikujesz." },
+  { id: "Zasada 7", title: "Lokalny konsensus, brak globalnego rejestru", desc: "Dystrybucja wiedzy przez protokół gossip, całkowite odrzucenie struktur typu globalne DHT." },
+  { id: "Zasada 8", title: "Jawny zakres działania", desc: "System operuje wyłącznie w granicach faktycznych, organicznych relacji ludzkich." },
+  { id: "Zasada 9", title: "Rejestracja, nie kreacja", desc: "System nie generuje nowej sztucznej wartości – wyłącznie uwierzytelnia i archiwizuje faktyczne intencje." },
+  { id: "Zasada 10", title: "Człowiek jako punkt odniesienia", desc: "System pełni rolę doradczą i strukturyzującą. Ostateczną decyzję podejmuje zawsze człowiek." }
+];
+
+// Renderowanie zasad rdzenia
+const container = document.getElementById('constitutional-rules-container');
+function renderRules(filterText = "") {
+  container.innerHTML = "";
+  coreRules.forEach(rule => {
+    if (filterText && !rule.title.toLowerCase().includes(filterText) && !rule.desc.toLowerCase().includes(filterText)) {
+      return;
+    }
+    const card = document.createElement('div');
+    card.className = 'rule-card';
+    card.innerHTML = `
+      <div class="rule-header" onclick="this.parentNode.classList.toggle('open')">
+        <span class="rule-title"><span class="rule-id">${rule.id}</span>${rule.title}</span>
+        <span style="font-size:12px; color:var(--bone-dim);">ROZWIŃ ▾</span>
+      </div>
+      <div class="rule-content">${rule.desc}</div>
+    `;
+    container.appendChild(card);
+  });
+}
+renderRules();
+
+// Interaktywna symulacja DAG
+function highlightPath(node) {
+  // Reset nodes
+  document.querySelectorAll('.dag-node').forEach(n => n.classList.remove('active'));
+  const status = document.getElementById('dag-status');
+  
+  if (node === 'g') {
+    document.getElementById('node-g').classList.add('active');
+    status.innerHTML = "<strong>Korzeń Genesis</strong>: Punkt zaufania absolutnego. Inicjuje pierwsze relacje sieci.";
+  } else if (node === 'a') {
+    document.getElementById('node-g').classList.add('active');
+    document.getElementById('node-a').classList.add('active');
+    status.innerHTML = "<strong>Ścieżka poręczeń:</strong> Genesis ➔ Węzeł A. Odpowiedzialność płynie bezpośrednio.";
+  } else if (node === 'b') {
+    document.getElementById('node-g').classList.add('active');
+    document.getElementById('node-a').classList.add('active');
+    document.getElementById('node-b').classList.add('active');
+    status.innerHTML = "<strong>Acykliczność (DAG):</strong> Węzeł B zyskał akceptację zarówno od Korzenia, jak i Węzła A. Odporność na awarie pojedynczego węzła wzrasta.";
+  } else if (node === 'c') {
+    document.querySelectorAll('.dag-node').forEach(n => n.classList.add('active'));
+    status.innerHTML = "<strong>Głęboka eskalacja:</strong> Wybór Węzła C obciąża całą ścieżkę (B, A oraz Genesis). Jeśli C okaże się atakiem typu Sybil, reputacja całej linii zapraszającej ulega degradacji.";
+  }
+}
+
+// Obsługa obliczeń Quorum i Decay
+const rangeN = document.getElementById('range-n');
+const rangeZa = document.getElementById('range-za');
+const rangePrzeciw = document.getElementById('range-przeciw');
+
+function updateQuorum() {
+  const n = parseInt(rangeN.value);
+  const za = parseFloat(rangeZa.value);
+  const przeciw = parseFloat(rangePrzeciw.value);
+  
+  document.getElementById('val-n').innerText = n;
+  document.getElementById('val-za').innerText = za.toFixed(1);
+  document.getElementById('val-przeciw').innerText = przeciw.toFixed(1);
+  
+  // Skład: max(3, min(5, floor(N/2)))
+  const sklad = Math.max(3, Math.min(5, Math.floor(n / 2)));
+  document.getElementById('res-sklad').innerText = sklad + " osób";
+  
+  const ratio = przeciw > 0 ? (za / przeciw) : za * 2;
+  document.getElementById('res-ratio').innerText = ratio.toFixed(2);
+  
+  const badge = document.getElementById('res-badge');
+  if (za > (przeciw * 1.5) && za > 0) {
+    badge.className = "status-badge status-pass";
+    badge.innerText = "Zatwierdzono (ZA > PRZECIW × 1.5)";
+  } else {
+    badge.className = "status-badge status-fail";
+    badge.innerText = "Odrzucono (Status Quo / Brak Większości)";
+  }
+}
+
+// Obsługa Decay
+const selectProfile = document.getElementById('select-profile');
+const rangeDays = document.getElementById('range-days');
+
+function updateDecay() {
+  const factor = parseFloat(selectProfile.value);
+  const days = parseInt(rangeDays.value);
+  document.getElementById('val-days').innerText = days;
+  
+  // Prosty model matematyczny zanikania zaufania z limitem dolnym 0.0
+  const currentTrust = Math.max(0.0, 1.0 - (days * factor * 0.1));
+  const display = document.getElementById('res-decay-val');
+  display.innerText = currentTrust.toFixed(2);
+  
+  if(currentTrust > 0.7) display.style.color = "var(--teal)";
+  else if(currentTrust > 0.3) display.style.color = "var(--amber)";
+  else display.style.color = "var(--red)";
+}
+
+[rangeN, rangeZa, rangePrzeciw].forEach(el => el.addEventListener('input', updateQuorum));
+[selectProfile, rangeDays].forEach(el => el.addEventListener('change', updateDecay));
+[rangeDays].forEach(el => el.addEventListener('input', updateDecay));
+
+// Inicjalizacja kalkulatorów
+updateQuorum();
+updateDecay();
+
+// Zaawansowana wyszukiwarka na żywo
+document.getElementById('search-box').addEventListener('input', (e) => {
+  const query = e.target.value.toLowerCase().trim();
+  
+  // Filtrowanie sekcji głównych
+  document.querySelectorAll('.section-panel').forEach(section => {
+    const text = section.innerText.toLowerCase();
+    if (query === "" || text.includes(query)) {
+      section.style.display = "block";
+    } else {
+      section.style.display = "none";
+    }
+  });
+  
+  // Filtrowanie wewnątrz 10 zasad rdzenia
+  renderRules(query);
+});
+
+// Podświetlanie menu bocznego podczas przewijania
+const links = document.querySelectorAll('#sidebar a');
+const sections = document.querySelectorAll('.section-panel');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      links.forEach(l => l.classList.remove('active'));
+      const activeLink = document.querySelector(`#sidebar a[href="#${entry.target.id}"]`);
+      if (activeLink) activeLink.classList.add('active');
+    }
+  });
+}, { rootMargin: '-20% 0px -60% 0px' });
+sections.forEach(s => observer.observe(s));
+</script>
+
+</body>
+</html>

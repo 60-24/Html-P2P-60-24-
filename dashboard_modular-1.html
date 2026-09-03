@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>P2P 60-24 OneClick Evo · Dashboard Modułowy</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Space+Grotesk:wght@300;400;600;700&display=swap');
+
+  :root {
+    --bg:       #080c10;
+    --bg1:      #0d1117;
+    --bg2:      #111820;
+    --bg3:      #192030;
+    --border:   #1e2d40;
+    --border2:  #243548;
+    --green:    #00e5a0;
+    --green2:   #00b87a;
+    --blue:     #4d9fff;
+    --blue2:    #2a6fd4;
+    --cyan:     #00d4e8;
+    --amber:    #f5a623;
+    --red:      #ff5a5a;
+    --purple:   #b06cff;
+    --text:     #c8d8e8;
+    --text2:    #7a9ab8;
+    --text3:    #4a6a88;
+    --font-mono: 'JetBrains Mono', monospace;
+    --font-ui:   'Space Grotesk', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-ui);
+    font-size: 13px;
+    line-height: 1.5;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* BACKGROUND */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      radial-gradient(ellipse 80% 60% at 50% 0%, rgba(0,229,160,0.04) 0%, transparent 70%),
+      radial-gradient(ellipse 60% 40% at 80% 100%, rgba(77,159,255,0.04) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* TOPBAR */
+  .topbar {
+    position: relative; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 16px;
+    background: var(--bg1);
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap; gap: 12px;
+  }
+
+  .topbar-title {
+    font-family: var(--font-mono);
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--green);
+    text-transform: uppercase;
+  }
+
+  .topbar-title span { color: var(--text2); font-weight: 300; margin-left: 8px; }
+
+  .topbar-status {
+    display: flex; gap: 16px; align-items: center;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text3);
+  }
+
+  .status-badge {
+    display: flex; align-items: center; gap: 6px;
+    padding: 4px 10px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+  }
+
+  .status-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+  /* CONTAINER */
+  .container {
+    position: relative; z-index: 1;
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 12px;
+    padding: 12px;
+    max-width: 1600px;
+    margin: 0 auto;
+    min-height: calc(100vh - 60px);
+  }
+
+  @media (max-width: 1200px) {
+    .container { grid-template-columns: 1fr; }
+  }
+
+  /* LEFT PANEL: SIMULATOR */
+  .simulator-panel {
+    background: var(--bg1);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+
+  .panel-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 14px;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .panel-title {
+    font-family: var(--font-mono);
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--text2);
+    text-transform: uppercase;
+  }
+
+  .panel-tag {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--text3);
+    background: var(--bg3);
+    padding: 2px 8px;
+    border-radius: 2px;
+  }
+
+  .simulator-content {
+    flex: 1;
+    padding: 12px;
+    overflow-y: auto;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+
+  /* STATS MINI */
+  .stats-mini {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+
+  .stat-mini {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 8px;
+    text-align: center;
+  }
+
+  .stat-mini-label {
+    font-family: var(--font-mono);
+    font-size: 8px; font-weight: 600;
+    letter-spacing: 0.1em;
+    color: var(--text3);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .stat-mini-value {
+    font-family: var(--font-mono);
+    font-size: 16px; font-weight: 700;
+    color: var(--text);
+  }
+
+  /* CHART PLACEHOLDER */
+  .chart-placeholder {
+    width: 100%;
+    height: 180px;
+    background: var(--bg3);
+    border: 1px dashed var(--border);
+    border-radius: 2px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text3);
+    font-family: var(--font-mono);
+    font-size: 11px;
+  }
+
+  /* CONTROLS */
+  .controls-bar {
+    display: flex; gap: 6px; flex-wrap: wrap;
+  }
+
+  .btn {
+    font-family: var(--font-mono);
+    font-size: 10px; font-weight: 600;
+    letter-spacing: 0.06em;
+    padding: 5px 12px;
+    border: 1px solid var(--border2);
+    background: var(--bg2);
+    color: var(--text2);
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+
+  .btn:hover {
+    border-color: var(--green);
+    color: var(--green);
+  }
+
+  .btn.primary {
+    background: var(--green2);
+    border-color: var(--green);
+    color: #000;
+  }
+
+  .btn.primary:hover {
+    background: var(--green);
+  }
+
+  /* RIGHT PANEL: MODULES GRID */
+  .modules-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  @media (max-width: 900px) {
+    .modules-grid { grid-template-columns: 1fr; }
+  }
+
+  /* MODULE CARD */
+  .module-card {
+    background: var(--bg1);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex; flex-direction: column;
+    min-height: 240px;
+    position: relative;
+  }
+
+  .module-card:hover {
+    border-color: var(--green);
+    box-shadow: 0 0 12px rgba(0, 229, 160, 0.1);
+    transform: translateY(-2px);
+  }
+
+  .module-card.module-nodes { --accent: var(--green); }
+  .module-card.module-readiness { --accent: var(--blue); }
+  .module-card.module-ontology { --accent: var(--cyan); }
+  .module-card.module-metrics { --accent: var(--amber); }
+
+  .module-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0;
+    width: 3px; height: 100%;
+    background: var(--accent);
+  }
+
+  .module-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 14px;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .module-title {
+    font-family: var(--font-mono);
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--text2);
+    text-transform: uppercase;
+  }
+
+  .module-expand-btn {
+    font-size: 12px;
+    cursor: pointer;
+    color: var(--text3);
+    transition: color 0.2s;
+  }
+
+  .module-card:hover .module-expand-btn {
+    color: var(--accent);
+  }
+
+  .module-body {
+    flex: 1;
+    padding: 12px;
+    overflow-y: auto;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+
+  /* MODULE CONTENT */
+  .nodes-preview {
+    width: 100%;
+    height: 120px;
+    background: var(--bg3);
+    border: 1px dashed var(--border);
+    border-radius: 2px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text3);
+  }
+
+  .node-dots {
+    display: flex; flex-wrap: wrap; gap: 4px;
+    justify-content: center;
+  }
+
+  .node-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--green);
+  }
+
+  .progress-bar {
+    width: 100%;
+    height: 4px;
+    background: var(--bg3);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    transition: width 0.5s ease;
+  }
+
+  .metric-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+  }
+
+  .metric-row:last-child { border-bottom: none; }
+
+  .metric-label { color: var(--text3); }
+  .metric-value {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  /* FULLSCREEN MODAL */
+  .modal {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .modal.active {
+    display: flex;
+    opacity: 1;
+  }
+
+  .modal-content {
+    width: 95%;
+    max-width: 1400px;
+    height: 95%;
+    background: var(--bg1);
+    border: 1px solid var(--green);
+    border-radius: 4px;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 0 30px rgba(0, 229, 160, 0.2);
+  }
+
+  .modal-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .modal-title {
+    font-family: var(--font-mono);
+    font-size: 12px; font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--green);
+    text-transform: uppercase;
+  }
+
+  .modal-close-btn {
+    font-size: 20px;
+    cursor: pointer;
+    color: var(--text2);
+    transition: color 0.2s;
+    width: 28px; height: 28px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 2px;
+    border: 1px solid var(--border);
+  }
+
+  .modal-close-btn:hover {
+    color: var(--green);
+    border-color: var(--green);
+  }
+
+  .modal-body {
+    flex: 1;
+    padding: 16px;
+    overflow-y: auto;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+
+  .modal-section {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 12px;
+  }
+
+  .modal-section-title {
+    font-family: var(--font-mono);
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--text2);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .full-chart {
+    width: 100%;
+    height: 300px;
+    background: var(--bg3);
+    border: 1px dashed var(--border);
+    border-radius: 2px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text3);
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+
+  .table-sim {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .table-sim tr { border-bottom: 1px solid var(--border); }
+  .table-sim tr:last-child { border-bottom: none; }
+  .table-sim td {
+    padding: 8px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+  }
+  .table-sim td:first-child { color: var(--text3); width: 50%; }
+  .table-sim td:last-child { color: var(--text); font-weight: 600; text-align: right; }
+
+  /* FOOTER */
+  .footer {
+    position: relative; z-index: 1;
+    border-top: 1px solid var(--border);
+    padding: 10px 16px;
+    background: var(--bg1);
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--text3);
+    letter-spacing: 0.08em;
+    text-align: center;
+  }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--border2); }
+
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div>
+    <div class="topbar-title">
+      P2P 60-24 OneClick Evo
+      <span>+ AI Documentation System v3.0</span>
+    </div>
+  </div>
+  <div class="topbar-status">
+    <div class="status-badge">
+      <div class="status-dot" style="background: #00e5a0;"></div>
+      <span>NET ACTIVE</span>
+    </div>
+    <div class="status-badge">
+      <span>TICK</span>
+      <span style="color: var(--green); font-weight: 700;">2847</span>
+    </div>
+    <div class="status-badge">
+      <span>LEVEL</span>
+      <span style="color: var(--amber); font-weight: 700;">N-4</span>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN CONTAINER -->
+<div class="container">
+
+  <!-- LEFT: SIMULATOR -->
+  <div class="simulator-panel">
+    <div class="panel-header">
+      <span class="panel-title">Symulator wzrostu sieci N-0 → N-5</span>
+      <span class="panel-tag">Live · Kernel v7.1</span>
+    </div>
+    <div class="simulator-content">
+      <div class="stats-mini">
+        <div class="stat-mini">
+          <div class="stat-mini-label">Węzły</div>
+          <div class="stat-mini-value">1,342</div>
+        </div>
+        <div class="stat-mini">
+          <div class="stat-mini-label">Readiness</div>
+          <div class="stat-mini-value">0.87</div>
+        </div>
+        <div class="stat-mini">
+          <div class="stat-mini-label">Rep Avg</div>
+          <div class="stat-mini-value">0.42</div>
+        </div>
+        <div class="stat-mini">
+          <div class="stat-mini-label">Φ (Phi)</div>
+          <div class="stat-mini-value">1.23</div>
+        </div>
+      </div>
+
+      <div class="chart-placeholder">
+        📊 Wykres wzrostu sieci<br/>
+        <span style="font-size: 9px; color: var(--text3);">Nodes · Readiness · Φ · Reputation</span>
+      </div>
+
+      <div class="controls-bar">
+        <button class="btn primary">▶ Start</button>
+        <button class="btn">⏸ Pauza</button>
+        <button class="btn">↺ Reset</button>
+        <select style="font-family: var(--font-mono); padding: 5px 8px; background: var(--bg2); border: 1px solid var(--border2); color: var(--text2); border-radius: 2px; font-size: 10px;">
+          <option>×1</option>
+          <option selected>×3</option>
+          <option>×8</option>
+          <option>×20</option>
+          <option>×MAX</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: MODULES GRID -->
+  <div class="modules-grid">
+
+    <!-- MODULE 1: NODE STATUS -->
+    <div class="module-card module-nodes" onclick="openModal('nodes')">
+      <div class="module-header">
+        <span class="module-title">Node Status · Live</span>
+        <span class="module-expand-btn">⛶</span>
+      </div>
+      <div class="module-body">
+        <div style="font-size: 10px; color: var(--text3); margin-bottom: 4px;">Status rozkład</div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: 65%; background: var(--green);"></div>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">● ACTIVE</span>
+          <span class="metric-value">876</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">○ IDLE</span>
+          <span class="metric-value">342</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">· SLEEP</span>
+          <span class="metric-value">124</span>
+        </div>
+        <div class="nodes-preview">
+          <div class="node-dots">
+            <div class="node-dot" style="background: var(--green);"></div>
+            <div class="node-dot" style="background: var(--green);"></div>
+            <div class="node-dot" style="background: var(--green);"></div>
+            <div class="node-dot" style="background: var(--blue);"></div>
+            <div class="node-dot" style="background: var(--blue);"></div>
+            <div class="node-dot" style="background: var(--text3);"></div>
+            <div class="node-dot" style="background: var(--text3);"></div>
+            <div class="node-dot" style="background: var(--text3);"></div>
+            <div class="node-dot" style="background: var(--text3);"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODULE 2: NET READINESS -->
+    <div class="module-card module-readiness" onclick="openModal('readiness')">
+      <div class="module-header">
+        <span class="module-title">Network Readiness</span>
+        <span class="module-expand-btn">⛶</span>
+      </div>
+      <div class="module-body">
+        <div style="font-size: 10px; color: var(--text3); margin-bottom: 8px;">Poziomy emergencji</div>
+        <div class="metric-row">
+          <span class="metric-label">N-0 · Komórka</span>
+          <div class="progress-bar" style="flex: 1; margin-left: 8px;">
+            <div class="progress-fill" style="width: 100%; background: var(--blue);"></div>
+          </div>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">N-1 · Obwód</span>
+          <div class="progress-bar" style="flex: 1; margin-left: 8px;">
+            <div class="progress-fill" style="width: 100%; background: var(--blue);"></div>
+          </div>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">N-2 · Mózg</span>
+          <div class="progress-bar" style="flex: 1; margin-left: 8px;">
+            <div class="progress-fill" style="width: 100%; background: var(--blue);"></div>
+          </div>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">N-3 · Organizm</span>
+          <div class="progress-bar" style="flex: 1; margin-left: 8px;">
+            <div class="progress-fill" style="width: 87%; background: var(--blue);"></div>
+          </div>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">N-4 · Gospodarka</span>
+          <div class="progress-bar" style="flex: 1; margin-left: 8px;">
+            <div class="progress-fill" style="width: 45%; background: var(--text3);"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODULE 3: ONTOLOGY HEALTH -->
+    <div class="module-card module-ontology" onclick="openModal('ontology')">
+      <div class="module-header">
+        <span class="module-title">Ontology Health · AI Docs</span>
+        <span class="module-expand-btn">⛶</span>
+      </div>
+      <div class="module-body">
+        <div style="font-size: 10px; color: var(--text3); margin-bottom: 8px;">Stan wiedzy</div>
+        <div class="metric-row">
+          <span class="metric-label">Health Score</span>
+          <span class="metric-value" style="color: var(--green);">0.93</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Węzły ontologii</span>
+          <span class="metric-value">47</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Relacje (krawędzie)</span>
+          <span class="metric-value">128</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Konflikty</span>
+          <span class="metric-value" style="color: var(--amber);">2</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Rozwiązane</span>
+          <span class="metric-value" style="color: var(--green);">1</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Cykli (DAG)</span>
+          <span class="metric-value" style="color: var(--green);">0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODULE 4: METRYKI SYSTEMU -->
+    <div class="module-card module-metrics" onclick="openModal('metrics')">
+      <div class="module-header">
+        <span class="module-title">Metryki systemu</span>
+        <span class="module-expand-btn">⛶</span>
+      </div>
+      <div class="module-body">
+        <div style="font-size: 10px; color: var(--text3); margin-bottom: 8px;">Wskaźniki zdrowotności</div>
+        <div class="metric-row">
+          <span class="metric-label">Compresion Ratio</span>
+          <span class="metric-value">20:1</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Info Loss</span>
+          <span class="metric-value" style="color: var(--green);">15%</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Eco Score</span>
+          <span class="metric-value" style="color: var(--green);">0.91</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Help Ratio</span>
+          <span class="metric-value">1.42</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Freshness</span>
+          <span class="metric-value" style="color: var(--green);">89%</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Gov Access</span>
+          <span class="metric-value">342</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- MODAL: NODE STATUS -->
+<div class="modal" id="modalNodes" onclick="closeModalOnBackdrop(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <span class="modal-title">Node Status · Live Visualization</span>
+      <button class="modal-close-btn" onclick="closeModal('nodes')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-section">
+        <div class="modal-section-title">Rozkład statusów węzłów</div>
+        <div class="full-chart">
+          🎨 Wizualizacja P2P: 1,342 węzłów<br/>
+          Active (●) · Idle (○) · Sleep (·) · Bootstrap (★)
+        </div>
+      </div>
+      <div class="modal-section">
+        <div class="modal-section-title">Statystyki</div>
+        <table class="table-sim">
+          <tr><td>Węzły ACTIVE (compute)</td><td>876</td></tr>
+          <tr><td>Węzły IDLE (waiting)</td><td>342</td></tr>
+          <tr><td>Węzły SLEEP (hibernated)</td><td>124</td></tr>
+          <tr><td>Bootstrap nodes</td><td>3</td></tr>
+          <tr><td>Avg peers per node</td><td>12.4</td></tr>
+          <tr><td>Max peers observed</td><td>47</td></tr>
+          <tr><td>Network diameter</td><td>6 hops</td></tr>
+        </table>
+      </div>
+      <div class="modal-section">
+        <div class="modal-section-title">Epigenome · Role Distribution</div>
+        <table class="table-sim">
+          <tr><td>Compute Workers</td><td>412</td></tr>
+          <tr><td>State Partitions</td><td>287</td></tr>
+          <tr><td>Routers</td><td>243</td></tr>
+          <tr><td>Anomaly Detectors</td><td>124</td></tr>
+          <tr><td>Replicators</td><td>98</td></tr>
+          <tr><td>Inference Endpoints</td><td>56</td></tr>
+          <tr><td>Idle / Unassigned</td><td>122</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: READINESS -->
+<div class="modal" id="modalReadiness" onclick="closeModalOnBackdrop(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <span class="modal-title">Network Readiness · Emergence Levels N-0 → N-5</span>
+      <button class="modal-close-btn" onclick="closeModal('readiness')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-section">
+        <div class="modal-section-title">Threshold Progress</div>
+        <div class="full-chart">
+          📈 Exponential Growth Chart<br/>
+          Readiness = (nodes/300) × (avg_peers/12) × (modules/20)
+        </div>
+      </div>
+      <div class="modal-section">
+        <div class="modal-section-title">Emergence Levels</div>
+        <table class="table-sim">
+          <tr><td><span style="color: var(--text3);">●</span> N-0 · Komórka</td><td>✓ Osiągnięty (1+)</td></tr>
+          <tr><td><span style="color: var(--blue);">●</span> N-1 · Obwód</td><td>✓ Osiągnięty (20+)</td></tr>
+          <tr><td><span style="color: var(--cyan);">●</span> N-2 · Mózg</td><td>✓ Osiągnięty (100+)</td></tr>
+          <tr><td><span style="color: var(--green);">●</span> N-3 · Organizm</td><td>✓ Osiągnięty (300+)</td></tr>
+          <tr><td><span style="color: var(--amber);">●</span> N-4 · Gospodarka</td><td>🔄 In Progress (1,342/1,000)</td></tr>
+          <tr><td><span style="color: var(--red);">●</span> N-5 · Cywilizacja</td><td>⏳ Planned (10,000+)</td></tr>
+        </table>
+      </div>
+      <div class="modal-section">
+        <div class="modal-section-title">Readiness Metrics</div>
+        <table class="table-sim">
+          <tr><td>Current Readiness</td><td>0.87</td></tr>
+          <tr><td>Target (N-4)</td><td>0.80+</td></tr>
+          <tr><td>Nodes component</td><td>4.47 / 5.0</td></tr>
+          <tr><td>Peers component</td><td>1.03 / 1.0</td></tr>
+          <tr><td>Modules component</td><td>0.85 / 1.0</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: ONTOLOGY -->
+<div class="modal" id="modalOntology" onclick="closeModalOnBackdrop(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <span class="modal-title">Ontology Health · AI Documentation System</span>
+      <button class="modal-close-btn" onclick="closeModal('ontology')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-section">
+        <div class="modal-section-title">Knowledge Graph Visualization</div>
+        <div class="full-chart">
+          🧠 Graf Ontologii<br/>
+          47 węzłów · 128 relacji · 0 cykli (DAG)
+        </div>
+      </div>
+      <div class="modal-section">
+        <div class="modal-section-title">Ontology Stats</div>
+        <table class="table-sim">
+          <tr><td>Węzły (nodes)</td><td>47</td></tr>
+          <tr><td>Relacje (edges)</td><td>128</td></tr>
+          <tr><td>Avg confidence</td><td>0.95</td></tr>
+          <tr><td>Edge validity</td><td>98%</td></tr>
+          <tr><td>Cykli (cycles)</td><td>0</td></tr>
+          <tr><td>Węzły sieroty (orphans)</td><td>0</td></tr>
+        </table>
+      </div>
+      <div class="modal-section">
+        <div class="modal-section-title">Conflict Resolution</div>
+        <table class="table-sim">
+          <tr><td>Konflikty wykryte</td><td>2</td></tr>
+          <tr><td>Rozwiązane</td><td>1</td></tr>
+          <tr><td>W trakcie (pending)</td><td>1</td></tr>
+          <tr><td>Reputacja konfliktów</td><td>NODE_TYPE_DIVERGENCE</td></tr>
+          <tr><td>Deadline</td><td>SES-008</td></tr>
+          <tr><td>Resolution rate</td><td>50%</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: METRICS -->
+<div class="modal" id="modalMetrics" onclick="closeModalOnBackdrop(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <span class="modal-title">System Health Metrics · Comprehensive</span>
+      <button class="modal-close-btn" onclick="closeModal('metrics')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-section">
+        <div class="modal-section-title">Compression & Context Efficiency</div>
+        <table class="table-sim">
+          <tr><td>Context Retention</td><td style="color: var(--green);">92% ✓</td></tr>
+          <tr><td>Compression Ratio</td><td>20:1 (10k→500 tokens)</td></tr>
+          <tr><td>Information Loss</td><td style="color: var(--green);">15% (target &lt;25%)</td></tr>
+          <tr><td>Tier-1 (Mandatory)</td><td>100% retention</td></tr>
+          <tr><td>Tier-2 (Semantic)</td><td>60% retention</td></tr>
+          <tr><td>Tier-3 (Narrative)</td><td>20% retention</td></tr>
+        </table>
+      </div>
+      <div class="modal-section">
+        <div class="modal-section-title">Network Ecology</div>
+        <table class="table-sim">
+          <tr><td>Eco Score</td><td style="color: var(--green);">0.91 (target ≥0.85)</td></tr>
+          <tr><td>Help Ratio</td><td>1.42 (net is helping)</td></tr>
+          <tr><td>Active / Idle / Sleep</td><td>65% / 25% / 10%</td></tr>
+          <tr><td>Sybil Resistance</td><td style="color: var(--green);">0.08 (safe &lt;0.1)</td></tr>
+          <tr><td>Trust Decay Rate</td><td>0.998 per tick</td></tr>
+          <tr><td>Total Help Recorded</td><td>2,847 interactions</td></tr>
+        </table>
+      </div>
+      <div class="modal-section">
+        <div class="modal-section-title">Session Continuity (AI System)</div>
+        <table class="table-sim">
+          <tr><td>Freshness Score</td><td style="color: var(--green);">89%</td></tr>
+          <tr><td>Checkpoint Recovery Time</td><td>&lt;2.3 seconds</td></tr>
+          <tr><td>Cross-Session Divergences</td><td>0 critical</td></tr>
+          <tr><td>Module Coherence</td><td>0.88 / 1.0</td></tr>
+          <tr><td>Dependency Complexity</td><td>0.45 / 1.0 (healthy)</td></tr>
+          <tr><td>Session Success Rate</td><td>100% (7/7)</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  P2P 60-24 OneClick Evo · Kernel v7.1 · AI Documentation System v3.0 · Liferay-style Modular Dashboard · Click any module to expand
+</div>
+
+<script>
+function openModal(id) {
+  const modalMap = {
+    nodes: 'modalNodes',
+    readiness: 'modalReadiness',
+    ontology: 'modalOntology',
+    metrics: 'modalMetrics'
+  };
+  const modal = document.getElementById(modalMap[id]);
+  if (modal) {
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+}
+
+function closeModal(id) {
+  const modalMap = {
+    nodes: 'modalNodes',
+    readiness: 'modalReadiness',
+    ontology: 'modalOntology',
+    metrics: 'modalMetrics'
+  };
+  const modal = document.getElementById(modalMap[id]);
+  if (modal) {
+    modal.classList.remove('active');
+    document.body.style.overflow = 'auto';
+  }
+}
+
+function closeModalOnBackdrop(event) {
+  if (event.target.classList.contains('modal')) {
+    event.target.classList.remove('active');
+    document.body.style.overflow = 'auto';
+  }
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.modal.active').forEach(m => {
+      m.classList.remove('active');
+      document.body.style.overflow = 'auto';
+    });
+  }
+});
+</script>
+
+</body>
+</html>
