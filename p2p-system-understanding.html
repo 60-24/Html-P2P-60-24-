@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P2P 60-24 OneClick Evo — System Understanding</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1, h2 {
+            margin-bottom: 30px;
+            color: #4ade80;
+        }
+
+        .section {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            background: rgba(100, 116, 139, 0.3);
+            border: 1px solid #64748b;
+            border-radius: 8px;
+            color: #e2e8f0;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .tab-btn.active {
+            background: #10b981;
+            border-color: #10b981;
+            color: white;
+        }
+
+        .tab-btn:hover {
+            border-color: #10b981;
+            color: #10b981;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        svg {
+            max-width: 100%;
+            height: auto;
+            margin-bottom: 20px;
+        }
+
+        .description {
+            background: rgba(15, 23, 42, 0.5);
+            border-left: 3px solid #10b981;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .legend {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        .code-block {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid #334155;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            overflow-x: auto;
+            line-height: 1.5;
+            margin-top: 15px;
+        }
+
+        .interactive-demo {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .demo-box {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid #334155;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .demo-box h4 {
+            color: #4ade80;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .demo-box input, .demo-box select {
+            width: 100%;
+            padding: 8px;
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid #334155;
+            border-radius: 6px;
+            color: #e2e8f0;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .demo-result {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid #10b981;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 10px;
+            font-size: 13px;
+        }
+
+        .formula {
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid #6366f1;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            margin: 15px 0;
+            color: #a5b4fc;
+        }
+
+        footer {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid #334155;
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        @media (max-width: 768px) {
+            .interactive-demo {
+                grid-template-columns: 1fr;
+            }
+
+            .legend {
+                grid-template-columns: 1fr;
+            }
+
+            .section {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🎯 P2P 60-24 OneClick Evo — System Understanding</h1>
+    <p style="color: #94a3b8; margin-bottom: 30px;">Interaktywna wizualizacja architektury, ontologii i mechanizmów systemu</p>
+
+    <!-- TAB NAVIGATION -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('omnikernel')">🔑 OmniKernel</button>
+        <button class="tab-btn" onclick="switchTab('hierarchy')">📊 Hierarchia bytów</button>
+        <button class="tab-btn" onclick="switchTab('realbond')">💰 RealBond</button>
+        <button class="tab-btn" onclick="switchTab('trust')">🎖️ Trust & Reputation</button>
+        <button class="tab-btn" onclick="switchTab('network')">🌐 Węzły i DAG</button>
+        <button class="tab-btn" onclick="switchTab('modules')">⚡ Moduły S/I/R/E</button>
+        <button class="tab-btn" onclick="switchTab('formulas')">📐 Formuły</button>
+    </div>
+
+    <!-- TAB 1: OMNIKERNEL -->
+    <div class="tab-content active" id="tab-omnikernel">
+        <div class="section">
+            <h2>🔑 OmniKernel — Prawa Absolutne Systemu</h2>
+            
+            <div class="description">
+                OmniKernel to 5 pojęć absolutnych, które obowiązują każdy system zbudowany na tej fundacji. 
+                Są niezmienne, niezależne od konkretnych implementacji.
+            </div>
+
+            <svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg">
+                <!-- Centrum -->
+                <circle cx="400" cy="250" r="80" fill="rgba(16, 185, 129, 0.2)" stroke="#10b981" stroke-width="3"/>
+                <text x="400" y="260" text-anchor="middle" font-size="24" font-weight="bold" fill="#10b981">OmniKernel</text>
+
+                <!-- 5 elementów wokół -->
+                <g id="identity">
+                    <circle cx="150" cy="100" r="60" fill="rgba(99, 102, 241, 0.2)" stroke="#6366f1" stroke-width="2"/>
+                    <text x="150" y="95" text-anchor="middle" font-size="16" font-weight="bold" fill="#a5b4fc">Identity</text>
+                    <text x="150" y="115" text-anchor="middle" font-size="12" fill="#cbd5e1">Tożsamość</text>
+                    <line x1="210" y1="140" x2="330" y2="210" stroke="#6366f1" stroke-width="2" stroke-dasharray="5,5"/>
+                </g>
+
+                <g id="trust">
+                    <circle cx="650" cy="100" r="60" fill="rgba(59, 130, 246, 0.2)" stroke="#3b82f6" stroke-width="2"/>
+                    <text x="650" y="95" text-anchor="middle" font-size="16" font-weight="bold" fill="#93c5fd">Trust</text>
+                    <text x="650" y="115" text-anchor="middle" font-size="12" fill="#cbd5e1">Zaufanie</text>
+                    <line x1="590" y1="140" x2="470" y2="210" stroke="#3b82f6" stroke-width="2" stroke-dasharray="5,5"/>
+                </g>
+
+                <g id="signal">
+                    <circle cx="100" cy="350" r="60" fill="rgba(234, 179, 8, 0.2)" stroke="#eab308" stroke-width="2"/>
+                    <text x="100" y="345" text-anchor="middle" font-size="16" font-weight="bold" fill="#fcd34d">Signal</text>
+                    <text x="100" y="365" text-anchor="middle" font-size="12" fill="#cbd5e1">Sygnał</text>
+                    <line x1="150" y1="400" x2="330" y2="290" stroke="#eab308" stroke-width="2" stroke-dasharray="5,5"/>
+                </g>
+
+                <g id="state">
+                    <circle cx="700" cy="350" r="60" fill="rgba(239, 68, 68, 0.2)" stroke="#ef4444" stroke-width="2"/>
+                    <text x="700" y="345" text-anchor="middle" font-size="16" font-weight="bold" fill="#fca5a5">State</text>
+                    <text x="700" y="365" text-anchor="middle" font-size="12" fill="#cbd5e1">Stan</text>
+                    <line x1="650" y1="400" x2="470" y2="290" stroke="#ef4444" stroke-width="2" stroke-dasharray="5,5"/>
+                </g>
+
+                <g id="time">
+                    <circle cx="400" cy="450" r="60" fill="rgba(168, 85, 247, 0.2)" stroke="#a855f7" stroke-width="2"/>
+                    <text x="400" y="445" text-anchor="middle" font-size="16" font-weight="bold" fill="#e9d5ff">Time</text>
+                    <text x="400" y="465" text-anchor="middle" font-size="12" fill="#cbd5e1">Czas</text>
+                    <line x1="400" y1="390" x2="400" y2="330" stroke="#a855f7" stroke-width="2" stroke-dasharray="5,5"/>
+                </g>
+            </svg>
+
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: rgba(99, 102, 241, 0.3); border: 1px solid #6366f1;"></div>
+                    <span><strong>Identity:</strong> Każdy byt ma unikalną tożsamość</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: rgba(59, 130, 246, 0.3); border: 1px solid #3b82f6;"></div>
+                    <span><strong>Trust:</strong> Byty mogą sobie ufać (dynamiczne)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: rgba(234, 179, 8, 0.3); border: 1px solid #eab308;"></div>
+                    <span><strong>Signal:</strong> Komunikacja z treścią i czasem</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: rgba(239, 68, 68, 0.3); border: 1px solid #ef4444;"></div>
+                    <span><strong>State:</strong> Ewoluujące, nieusuwalne stany</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: rgba(168, 85, 247, 0.3); border: 1px solid #a855f7;"></div>
+                    <span><strong>Time:</strong> Wszystko dzieje się w jednostronnym czasie</span>
+                </div>
+            </div>
+
+            <div class="code-block">
+Test grawitacji: Czy to prawo musi obowiązywać w KAŻDYM możliwym systemie?
+TAK  → OmniKernel
+NIE  → Niższa warstwa
+MOŻE → Nie należy (wątpliwość = odrzucenie)
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 2: HIERARCHY -->
+    <div class="tab-content" id="tab-hierarchy">
+        <div class="section">
+            <h2>📊 Hierarchia Bytów — Od Atomu do Ekosystemu</h2>
+            
+            <div class="description">
+                System buduje złożoność przez kontrolowaną kompozycję. Każdy poziom wymaga poprzedniego.
+                Atomy muszą być proste, by całość mogła być elegancka.
+            </div>
+
+            <svg viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
+                <!-- Poziom 0 -->
+                <rect x="50" y="20" width="700" height="80" fill="rgba(16, 185, 129, 0.1)" stroke="#10b981" stroke-width="2" rx="8"/>
+                <text x="70" y="45" font-size="14" font-weight="bold" fill="#4ade80">Poziom 0: ATOM</text>
+                <text x="70" y="65" font-size="12" fill="#cbd5e1">Pojedyncze: byt, event, decyzja, relacja, zasób</text>
+                <text x="70" y="80" font-size="11" fill="#94a3b8">Przykład: Jedna godzina pracy, jedno zobowiązanie (RealBond), jeden node ID</text>
+
+                <!-- Poziom 1 -->
+                <rect x="50" y="120" width="700" height="80" fill="rgba(59, 130, 246, 0.1)" stroke="#3b82f6" stroke-width="2" rx="8"/>
+                <text x="70" y="145" font-size="14" font-weight="bold" fill="#60a5fa">Poziom 1: PAKIET</text>
+                <text x="70" y="165" font-size="12" fill="#cbd5e1">Zbiór atomów, przetwarzalna porcja (ID + timestamp + nadawca)</text>
+                <text x="70" y="180" font-size="11" fill="#94a3b8">Przykład: Event wiadomość (nadawca + treść + czas), Bond transfer (dwie strony + historia)</text>
+
+                <!-- Poziom 2 -->
+                <rect x="50" y="220" width="700" height="80" fill="rgba(168, 85, 247, 0.1)" stroke="#a855f7" stroke-width="2" rx="8"/>
+                <text x="70" y="245" font-size="14" font-weight="bold" fill="#d8b4fe">Poziom 2: MODUŁ</text>
+                <text x="70" y="265" font-size="12" fill="#cbd5e1">Przetwarza pakiety, jedna funkcja (single-purpose, autonomiczny)</text>
+                <text x="70" y="280" font-size="11" fill="#94a3b8">Przykład: trust.mod (oblicza TrustMetric), storage.mod (przechowuje dane), gossip.mod (wysyła wiadomości)</text>
+
+                <!-- Poziom 3 -->
+                <rect x="50" y="320" width="700" height="80" fill="rgba(234, 179, 8, 0.1)" stroke="#eab308" stroke-width="2" rx="8"/>
+                <text x="70" y="345" font-size="14" font-weight="bold" fill="#fcd34d">Poziom 3: RELACJA</text>
+                <text x="70" y="365" font-size="12" fill="#cbd5e1">Interakcja między modułami, klaster Relation jako byt pierwszej klasy</text>
+                <text x="70" y="380" font-size="11" fill="#94a3b8">Przykład: kernel ↔ trust.mod, trust.mod ↔ storage.mod (zależności, przepływy danych)</text>
+
+                <!-- Poziom 4 -->
+                <rect x="50" y="420" width="700" height="80" fill="rgba(239, 68, 68, 0.1)" stroke="#ef4444" stroke-width="2" rx="8"/>
+                <text x="70" y="445" font-size="14" font-weight="bold" fill="#fca5a5">Poziom 4: SCENARIUSZ</text>
+                <text x="70" y="465" font-size="12" fill="#cbd5e1">Ciąg relacji, workflow — potrzeba → oferta → pledge</text>
+                <text x="70" y="480" font-size="11" fill="#94a3b8">Przykład: Wymiana dobra (need)→(find peer)→(offer)→(pledge)→(completion)→(reputation update)</text>
+
+                <!-- Poziom 5 -->
+                <rect x="50" y="520" width="700" height="60" fill="rgba(99, 102, 241, 0.1)" stroke="#6366f1" stroke-width="2" rx="8"/>
+                <text x="70" y="545" font-size="14" font-weight="bold" fill="#a5b4fc">Poziom 5: EKOSYSTEM</text>
+                <text x="70" y="565" font-size="12" fill="#cbd5e1">Wiele scenariuszy, węzły, sieć — człowiek w realnym miejscu</text>
+            </svg>
+
+            <div class="code-block">
+Zasada kwantyzacji:
+System nie przetwarza strumieni — przetwarza pakiety.
+Brak ciągłości → tylko dyskretne porcje.
+Każda porcja: ID · czas · nadawca · trust_score
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 3: REALBOND -->
+    <div class="tab-content" id="tab-realbond">
+        <div class="section">
+            <h2>💰 RealBond — Pseudo-blockchain Relacji</h2>
+            
+            <div class="description">
+                RealBond nie przechowuje transakcji finansowych. Przechowuje historię relacji między ludźmi.
+                Jest wekslem wzajemnym — nie kryptowalutą.
+            </div>
+
+            <svg viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+                <!-- Cykl -->
+                <circle cx="200" cy="150" r="50" fill="rgba(59, 130, 246, 0.2)" stroke="#3b82f6" stroke-width="2"/>
+                <text x="200" y="160" text-anchor="middle" font-size="12" font-weight="bold" fill="#60a5fa">Zaufanie</text>
+
+                <circle cx="350" cy="80" r="50" fill="rgba(99, 102, 241, 0.2)" stroke="#6366f1" stroke-width="2"/>
+                <text x="350" y="90" text-anchor="middle" font-size="12" font-weight="bold" fill="#a5b4fc">Gwarancja</text>
+
+                <circle cx="500" cy="100" r="50" fill="rgba(168, 85, 247, 0.2)" stroke="#a855f7" stroke-width="2"/>
+                <text x="500" y="110" text-anchor="middle" font-size="12" font-weight="bold" fill="#d8b4fe">Reputacja</text>
+
+                <circle cx="550" cy="250" r="50" fill="rgba(16, 185, 129, 0.2)" stroke="#10b981" stroke-width="2"/>
+                <text x="550" y="260" text-anchor="middle" font-size="12" font-weight="bold" fill="#4ade80">Szacunek</text>
+
+                <circle cx="400" cy="320" r="50" fill="rgba(234, 179, 8, 0.2)" stroke="#eab308" stroke-width="2"/>
+                <text x="400" y="330" text-anchor="middle" font-size="12" font-weight="bold" fill="#fcd34d">Odpowiedzial.</text>
+
+                <circle cx="250" cy="300" r="50" fill="rgba(239, 68, 68, 0.2)" stroke="#ef4444" stroke-width="2"/>
+                <text x="250" y="310" text-anchor="middle" font-size="12" font-weight="bold" fill="#fca5a5">Obowiązek</text>
+
+                <!-- Strzałki łączące -->
+                <path d="M 240 100 Q 290 50 310 60" fill="none" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrowhead)"/>
+                <path d="M 390 40 Q 450 50 470 80" fill="none" stroke="#6366f1" stroke-width="2" marker-end="url(#arrowhead)"/>
+                <path d="M 530 140 Q 560 190 560 200" fill="none" stroke="#a855f7" stroke-width="2" marker-end="url(#arrowhead)"/>
+                <path d="M 510 290 Q 460 310 420 320" fill="none" stroke="#10b981" stroke-width="2" marker-end="url(#arrowhead)"/>
+                <path d="M 350 350 Q 280 330 270 310" fill="none" stroke="#eab308" stroke-width="2" marker-end="url(#arrowhead)"/>
+                <path d="M 200 250 Q 200 190 180 160" fill="none" stroke="#ef4444" stroke-width="2" marker-end="url(#arrowhead)"/>
+
+                <defs>
+                    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto">
+                        <polygon points="0 0, 10 5, 0 10" fill="#4ade80"/>
+                    </marker>
+                </defs>
+
+                <!-- Tekst centralno -->
+                <rect x="280" y="150" width="120" height="60" fill="rgba(15, 23, 42, 0.8)" stroke="#10b981" stroke-width="2" rx="8"/>
+                <text x="340" y="175" text-anchor="middle" font-size="12" font-weight="bold" fill="#10b981">RealBond</text>
+                <text x="340" y="195" text-anchor="middle" font-size="10" fill="#cbd5e1">weksel wzajemny</text>
+            </svg>
+
+            <div style="margin-top: 20px;">
+                <h3 style="color: #4ade80; margin-bottom: 15px;">Sześć Pojęć RealBond</h3>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="demo-box">
+                        <h4>1. Zaufanie</h4>
+                        <p style="font-size: 12px; color: #cbd5e1;">Punkt wejścia<br>Poprzedza więź</p>
+                    </div>
+                    <div class="demo-box">
+                        <h4>2. Gwarancja</h4>
+                        <p style="font-size: 12px; color: #cbd5e1;">Obietnica z podpisem<br>Poprzedza więź</p>
+                    </div>
+                    <div class="demo-box">
+                        <h4>3. Reputacja</h4>
+                        <p style="font-size: 12px; color: #cbd5e1;">Historia czynów<br>Widoczna, poprzedza więź</p>
+                    </div>
+                    <div class="demo-box">
+                        <h4>4. Szacunek</h4>
+                        <p style="font-size: 12px; color: #cbd5e1;">Uznanie, nie wymuszony<br>Wynika z więzi</p>
+                    </div>
+                    <div class="demo-box">
+                        <h4>5. Odpowiedzialność</h4>
+                        <p style="font-size: 12px; color: #cbd5e1;">Skutki wracają do autora<br>Wynika z więzi</p>
+                    </div>
+                    <div class="demo-box">
+                        <h4>6. Obowiązek</h4>
+                        <p style="font-size: 12px; color: #cbd5e1;">Dobrowolny, wiążący<br>Wynika z więzi</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="code-block" style="margin-top: 20px;">
+Zasada R-11: RealBond jest wekslem, nie tokenem
+• Brak ceny rynkowej (wartość wynika z relacji)
+• Brak wahań kursu (200 PLN = zawsze 200 PLN)
+• Brak spekulacji (więź tylko między konkretnym osobami)
+• Brak rynku wtórnego (transfer wymaga nowego Proof of Meeting)
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 4: TRUST & REPUTATION -->
+    <div class="tab-content" id="tab-trust">
+        <div class="section">
+            <h2>🎖️ Trust & Reputation — Dynamika Wag</h2>
+            
+            <div class="description">
+                TrustMetric (liczba 0-1) pokazuje zdolność do uzyskania przyszłego działania od konkretnej osoby.
+                Zmienia się z każdą interakcją. Nigdy się nie resetuje — tylko maleje lub rośnie.
+            </div>
+
+            <h3 style="color: #4ade80; margin: 20px 0 15px;">Krągi Dunbar — Warstwy Zaufania</h3>
+
+            <svg viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+                <!-- Krąg 1 -->
+                <circle cx="400" cy="200" r="50" fill="rgba(16, 185, 129, 0.3)" stroke="#10b981" stroke-width="3"/>
+                <text x="400" y="205" text-anchor="middle" font-size="12" font-weight="bold" fill="#4ade80">Core</text>
+                <text x="400" y="220" text-anchor="middle" font-size="10" fill="#cbd5e1">5 osób</text>
+
+                <!-- Krąg 2 -->
+                <circle cx="400" cy="200" r="120" fill="rgba(59, 130, 246, 0.15)" stroke="#3b82f6" stroke-width="2"/>
+                <text x="280" y="90" font-size="11" font-weight="bold" fill="#60a5fa">Close: 15 osób</text>
+
+                <!-- Krąg 3 -->
+                <circle cx="400" cy="200" r="180" fill="rgba(168, 85, 247, 0.1)" stroke="#a855f7" stroke-width="2"/>
+                <text x="150" y="40" font-size="11" font-weight="bold" fill="#d8b4fe">Extended: 50 osób</text>
+
+                <!-- Wagi -->
+                <text x="400" y="145" text-anchor="middle" font-size="10" fill="#94a3b8">1.0</text>
+                <text x="380" y="165" font-size="10" fill="#94a3b8">0.6</text>
+                <text x="350" y="145" font-size="10" fill="#94a3b8">0.3</text>
+            </svg>
+
+            <h3 style="color: #4ade80; margin: 20px 0 15px;">Dynamika Reputacji</h3>
+
+            <div class="interactive-demo">
+                <div class="demo-box">
+                    <h4>Wzrost (powolny)</h4>
+                    <p style="font-size: 12px; margin-bottom: 10px; color: #cbd5e1;">
+                        • Wymiana zakończona sukcesem<br>
+                        • Poręczenie od wyższego kręgu<br>
+                        • Historia bez incydentów<br>
+                        • Rozwiązanie konfliktu
+                    </p>
+                </div>
+                <div class="demo-box">
+                    <h4>Spadek (szybki)</h4>
+                    <p style="font-size: 12px; margin-bottom: 10px; color: #cbd5e1;">
+                        • Jeden poważny incydent<br>
+                        • Niespełnione zobowiązanie<br>
+                        • Zmiana TrustMetric u wierzyciela<br>
+                        • Widoczność w kręgu
+                    </p>
+                </div>
+            </div>
+
+            <div class="formula">
+TrustMetric = f(Krąg, Historia, Aktywność, Decay)<br>
+<br>
+Cykl życia:<br>
+Człowiek buduje zaufanie przez czas (miesiące)<br>
+Człowiek traci zaufanie w chwili (dni)<br>
+Szacunek wymaga aktywności (spotkań, wymiany)
+            </div>
+
+            <div class="code-block">
+Zasada R-2: Każdy profil ma własną funkcję decay
+• Profil rodzinny: decay bliski zeru (czas nie dominuje)
+• Profil przyjacielski: decay wolny (aktywność podtrzymuje)
+• Profil sąsiedzki: decay lokalny (obecność liczy)
+• Profil zawodowy: decay szybki (aktywność dominuje)
+• Profil przygodny: decay najszybszy (brak sygnału = wygaśnięcie)
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 5: NETWORK -->
+    <div class="tab-content" id="tab-network">
+        <div class="section">
+            <h2>🌐 Węzły i DAG — Sieć Zaufania</h2>
+            
+            <div class="description">
+                Sieć P2P 60-24 ma strukturę skierowanego grafu acyklicznego (DAG). 
+                Jeden węzeł można zaprosić przez kilka osób. Odpowiedzialność dziedziczy się wzdłuż ścieżek.
+            </div>
+
+            <svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg">
+                <!-- Genesis (root) -->
+                <circle cx="400" cy="50" r="40" fill="rgba(16, 185, 129, 0.3)" stroke="#10b981" stroke-width="3"/>
+                <text x="400" y="55" text-anchor="middle" font-size="11" font-weight="bold" fill="#4ade80">Genesis</text>
+
+                <!-- Depth 1 -->
+                <circle cx="250" cy="150" r="35" fill="rgba(59, 130, 246, 0.2)" stroke="#3b82f6" stroke-width="2"/>
+                <text x="250" y="155" text-anchor="middle" font-size="10" fill="#60a5fa">Node A</text>
+
+                <circle cx="550" cy="150" r="35" fill="rgba(59, 130, 246, 0.2)" stroke="#3b82f6" stroke-width="2"/>
+                <text x="550" y="155" text-anchor="middle" font-size="10" fill="#60a5fa">Node B</text>
+
+                <!-- Strzałki Genesis → Depth 1 -->
+                <line x1="380" y1="85" x2="270" y2="145" stroke="#10b981" stroke-width="2" marker-end="url(#arrowhead2)"/>
+                <line x1="420" y1="85" x2="530" y2="145" stroke="#10b981" stroke-width="2" marker-end="url(#arrowhead2)"/>
+
+                <!-- Depth 2 -->
+                <circle cx="150" cy="280" r="35" fill="rgba(168, 85, 247, 0.2)" stroke="#a855f7" stroke-width="2"/>
+                <text x="150" y="285" text-anchor="middle" font-size="10" fill="#d8b4fe">Node C</text>
+
+                <circle cx="350" cy="280" r="35" fill="rgba(168, 85, 247, 0.2)" stroke="#a855f7" stroke-width="2"/>
+                <text x="350" y="285" text-anchor="middle" font-size="10" fill="#d8b4fe">Node D</text>
+
+                <circle cx="550" cy="280" r="35" fill="rgba(168, 85, 247, 0.2)" stroke="#a855f7" stroke-width="2"/>
+                <text x="550" y="285" text-anchor="middle" font-size="10" fill="#d8b4fe">Node E</text>
+
+                <!-- Strzałki do Depth 2 -->
+                <line x1="220" y1="180" x2="170" y2="250" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrowhead3)"/>
+                <line x1="250" y1="185" x2="320" y2="250" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrowhead3)"/>
+                <line x1="550" y1="185" x2="550" y2="250" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrowhead3)"/>
+
+                <!-- Depth 3+ (samo połączenia) -->
+                <circle cx="100" cy="420" r="30" fill="rgba(234, 179, 8, 0.2)" stroke="#eab308" stroke-width="2"/>
+                <text x="100" y="425" text-anchor="middle" font-size="9" fill="#fcd34d">Node F</text>
+
+                <circle cx="350" cy="420" r="30" fill="rgba(234, 179, 8, 0.2)" stroke="#eab308" stroke-width="2"/>
+                <text x="350" y="425" text-anchor="middle" font-size="9" fill="#fcd34d">Node G</text>
+
+                <circle cx="600" cy="420" r="30" fill="rgba(234, 179, 8, 0.2)" stroke="#eab308" stroke-width="2"/>
+                <text x="600" y="425" text-anchor="middle" font-size="9" fill="#fcd34d">Node H</text>
+
+                <!-- Strzałki do Depth 3 -->
+                <line x1="130" y1="310" x2="110" y2="390" stroke="#a855f7" stroke-width="2" marker-end="url(#arrowhead4)"/>
+                <line x1="350" y1="315" x2="350" y2="390" stroke="#a855f7" stroke-width="2" marker-end="url(#arrowhead4)"/>
+                <line x1="570" y1="315" x2="590" y2="390" stroke="#a855f7" stroke-width="2" marker-end="url(#arrowhead4)"/>
+
+                <!-- Legend -->
+                <text x="20" y="480" font-size="11" fill="#94a3b8">Depth 0: Genesis (root) • Depth 1: 2 węzły • Depth 2: 3 węzły • Depth 3+: niezależne</text>
+
+                <defs>
+                    <marker id="arrowhead2" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto">
+                        <polygon points="0 0, 10 5, 0 10" fill="#10b981"/>
+                    </marker>
+                    <marker id="arrowhead3" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto">
+                        <polygon points="0 0, 10 5, 0 10" fill="#3b82f6"/>
+                    </marker>
+                    <marker id="arrowhead4" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto">
+                        <polygon points="0 0, 10 5, 0 10" fill="#a855f7"/>
+                    </marker>
+                </defs>
+            </svg>
+
+            <div class="code-block" style="margin-top: 20px;">
+Zasada R-9: Protokół Genesis
+• Depth 0: Genesis — jedyny punkt absolutny
+• Depth 1: Genesis → 3-5 osób bez poręczenia
+• Depth 2+: Każde zaproszenie wymaga poręczyciela
+• Depth ≥ 3: Sieć samowystarczalna (Genesis nie potrzebny)
+            </div>
+
+            <h3 style="color: #4ade80; margin: 20px 0 15px;">Proof of Meeting — Dowód Spotkania</h3>
+
+            <div style="background: rgba(15, 23, 42, 0.5); border: 1px solid #334155; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                <p style="font-size: 13px; line-height: 1.6; color: #cbd5e1;">
+                    <strong>Wymaganie:</strong> Zaproszenie wymaga wymiany kodów QR twarzą w twarz.<br>
+                    <strong>Format:</strong> QR zawiera: ID zapraszającego · podpis ed25519 · czas ważności · krąg docelowy<br>
+                    <strong>Skutek:</strong> Skanowanie = akt spotkania w świecie realnym
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 6: MODULES -->
+    <div class="tab-content" id="tab-modules">
+        <div class="section">
+            <h2>⚡ Moduły — Model S/I/R/E</h2>
+            
+            <div class="description">
+                Każdy moduł ma cykl życia: Stable → Ill → Recovery → Emerging.
+                Moduły mogą się łączyć (MergeSignal), dzielić lub umierać (apoptoza).
+            </div>
+
+            <svg viewBox="0 0 800 350" xmlns="http://www.w3.org/2000/svg">
+                <!-- S: Stable -->
+                <circle cx="150" cy="150" r="60" fill="rgba(16, 185, 129, 0.2)" stroke="#10b981" stroke-width="3"/>
+                <text x="150" y="145" text-anchor="middle" font-size="16" font-weight="bold" fill="#4ade80">S</text>
+                <text x="150" y="165" text-anchor="middle" font-size="11" fill="#cbd5e1">Stable</text>
+                <text x="150" y="180" text-anchor="middle" font-size="10" fill="#94a3b8">Funkcjonuje</text>
+
+                <!-- I: Ill -->
+                <circle cx="300" cy="100" r="60" fill="rgba(239, 68, 68, 0.2)" stroke="#ef4444" stroke-width="3"/>
+                <text x="300" y="95" text-anchor="middle" font-size="16" font-weight="bold" fill="#fca5a5">I</text>
+                <text x="300" y="115" text-anchor="middle" font-size="11" fill="#cbd5e1">Ill</text>
+                <text x="300" y="130" text-anchor="middle" font-size="10" fill="#94a3b8">Sygnały złe</text>
+
+                <!-- R: Recovery -->
+                <circle cx="450" cy="150" r="60" fill="rgba(234, 179, 8, 0.2)" stroke="#eab308" stroke-width="3"/>
+                <text x="450" y="145" text-anchor="middle" font-size="16" font-weight="bold" fill="#fcd34d">R</text>
+                <text x="450" y="165" text-anchor="middle" font-size="11" fill="#cbd5e1">Recovery</text>
+                <text x="450" y="180" text-anchor="middle" font-size="10" fill="#94a3b8">Naprawa</text>
+
+                <!-- E: Emerging -->
+                <circle cx="600" cy="100" r="60" fill="rgba(99, 102, 241, 0.2)" stroke="#6366f1" stroke-width="3"/>
+                <text x="600" y="95" text-anchor="middle" font-size="16" font-weight="bold" fill="#a5b4fc">E</text>
+                <text x="600" y="115" text-anchor="middle" font-size="11" fill="#cbd5e1">Emerging</text>
+                <text x="600" y="130" text-anchor="middle" font-size="10" fill="#94a3b8">Nowy moduł</text>
+
+                <!-- Przejścia -->
+                <path d="M 210 150 L 240 150" stroke="#ef4444" stroke-width="2" marker-end="url(#arrowhead5)"/>
+                <text x="225" y="140" text-anchor="middle" font-size="10" fill="#94a3b8">anomalia</text>
+
+                <path d="M 350 110 L 400 140" stroke="#eab308" stroke-width="2" marker-end="url(#arrowhead6)"/>
+                <text x="370" y="115" text-anchor="middle" font-size="10" fill="#94a3b8">leczenie</text>
+
+                <path d="M 500 160 L 200 160" stroke="#10b981" stroke-width="2" marker-end="url(#arrowhead2)"/>
+                <text x="350" y="175" text-anchor="middle" font-size="10" fill="#94a3b8">powrót do zdrowia</text>
+
+                <path d="M 560 100 L 520 100" stroke="#6366f1" stroke-width="2" stroke-dasharray="5,5"/>
+                <text x="540" y="80" text-anchor="middle" font-size="10" fill="#94a3b8">czeka na adopcję</text>
+
+                <defs>
+                    <marker id="arrowhead5" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto">
+                        <polygon points="0 0, 10 5, 0 10" fill="#ef4444"/>
+                    </marker>
+                    <marker id="arrowhead6" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto">
+                        <polygon points="0 0, 10 5, 0 10" fill="#eab308"/>
+                    </marker>
+                </defs>
+            </svg>
+
+            <h3 style="color: #4ade80; margin: 20px 0 15px;">Zdarzenia Cyklu Życia</h3>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                <div class="demo-box">
+                    <h4>Apoptoza (Śmierć)</h4>
+                    <p style="font-size: 12px; color: #cbd5e1;">
+                        Moduł który nie służy → umiera celowo.<br>
+                        To zdrowość systemu, nie porażka.
+                    </p>
+                </div>
+                <div class="demo-box">
+                    <h4>MergeSignal (Fuzja)</h4>
+                    <p style="font-size: 12px; color: #cbd5e1;">
+                        Dwa moduły się łączą gdy funkcje się wzmacniają.<br>
+                        Fuzja jest emergentna, nie administracyjna.
+                    </p>
+                </div>
+            </div>
+
+            <div class="code-block">
+Przykład cyklu życia modułu:
+1. E (Emerging): nowy moduł ui.mod (0.2.0-alpha)
+2. S (Stable): crypto.mod przechodzi do S (1.0.0 release)
+3. I (Ill): gossip.mod ma problemy z opóźnieniami
+4. R (Recovery): gossip.mod przeprojektowany, dodane buffery
+5. S (Stable): gossip.mod powraca do zdrowia
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 7: FORMULAS -->
+    <div class="tab-content" id="tab-formulas">
+        <div class="section">
+            <h2>📐 Formuły Systemowe</h2>
+            
+            <div class="description">
+                Wszystkie formuły w systemie muszą działać na minimalnym hardware (Raspberry Pi).
+                O(n) lub O(n log n) — nigdy O(n²).
+            </div>
+
+            <h3 style="color: #4ade80; margin: 20px 0 15px;">1. HappyCoin (HC) — Wartość Zobowiązania</h3>
+            <div class="formula">
+HC = T × Q × S<br>
+<br>
+T = Czas pracy (godziny)<br>
+Q = Jakość wykonania (0-1)<br>
+S = Satysfakcja odbiorcy (0-1)<br>
+<br>
+Przykład: 2h pracy, Q=0.9, S=0.95<br>
+HC = 2 × 0.9 × 0.95 = <strong>1.71 HC</strong>
+            </div>
+
+            <h3 style="color: #4ade80; margin: 20px 0 15px;">2. TrustMetric — Zdolność do Uzyskania Działania</h3>
+            <div class="formula">
+TrustMetric(A→B) = Σ(RelEvent_i) × Decay(t_i) × ProfileWeight(p)<br>
+<br>
+RelEvent = zdarzenie relacyjne (+0.05 do -0.15)<br>
+Decay(t) = e^(-λt) gdzie λ = 0.02 rocznie dla profilu przyjacielskiego<br>
+ProfileWeight = 0.3 do 1.0 wg profilu (sąsiedzki vs. rodzinny)<br>
+<br>
+Zasada: TrustMetric ∈ [0, 1], nigdy się nie resetuje
+            </div>
+
+            <h3 style="color: #4ade80; margin: 20px 0 15px;">3. Network Readiness — Próg Gotowości Sieci</h3>
+            <div class="formula">
+NetworkReadiness = (nodes / 300) × (avg_peers / 12) × (modules / 20)<br>
+<br>
+Gotowość gdy NetworkReadiness ≥ 0.8<br>
+<br>
+Przykład: 150 nodes, 8 peers średnio, 14 modułów<br>
+NR = (150/300) × (8/12) × (14/20) = 0.5 × 0.67 × 0.7 = 0.23<br>
+Status: Rozwijająca się sieć (< gotowość)
+            </div>
+
+            <h3 style="color: #4ade80; margin: 20px 0 15px;">4. Quorum dla Mediacji</h3>
+            <div class="formula">
+Quorum = max(3, min(5, floor(N/2)))<br>
+gdzie N = liczba osób w Kręgu 1+2 wierzyciela<br>
+<br>
+Głos = TrustMetric × recency_decay<br>
+Decyzja = Σ(głosy ZA) > Σ(głosy PRZECIW) × 1.5<br>
+<br>
+Przykład: N=8 osób w Kręgu 1+2<br>
+Quorum = max(3, min(5, 4)) = 4 osoby
+            </div>
+
+            <h3 style="color: #4ade80; margin: 20px 0 15px;">5. Reputacja Jako Produkt (Nie Suma)</h3>
+            <div class="formula">
+Wartość = C × T × K × E<br>
+<br>
+C = Contribution (ile dałeś)<br>
+T = Time (jak długo uczestniczysz)<br>
+K = Quality (jakość Twoich działań)<br>
+E = Emergence (wpływ na system)<br>
+<br>
+Produkt (nie suma!) chroni przed manipulacją<br>
+Jeden zero = cały iloczyn zero
+            </div>
+
+            <div class="interactive-demo" style="margin-top: 30px;">
+                <div class="demo-box">
+                    <h4>Kalkulator TrustMetric</h4>
+                    <label style="font-size: 12px;">Ilość pozytywnych zdarzeń:</label>
+                    <input type="number" id="events" value="5" min="0">
+                    
+                    <label style="font-size: 12px;">Dni wstecz:</label>
+                    <input type="number" id="days" value="30" min="0">
+                    
+                    <label style="font-size: 12px;">Profil:</label>
+                    <select id="profile">
+                        <option value="0.3">Sąsiedzki (0.3)</option>
+                        <option value="0.6">Przyjacielmski (0.6)</option>
+                        <option value="0.8">Zawodowy (0.8)</option>
+                        <option value="1.0">Rodzinny (1.0)</option>
+                    </select>
+                    
+                    <button onclick="calculateTrust()" style="background: #10b981; color: white; padding: 8px 15px; border: none; border-radius: 6px; margin-top: 10px; cursor: pointer; width: 100%; font-weight: 600;">Oblicz</button>
+                    
+                    <div class="demo-result" id="trustResult" style="display: none; margin-top: 10px;"></div>
+                </div>
+
+                <div class="demo-box">
+                    <h4>Kalkulator HappyCoin</h4>
+                    <label style="font-size: 12px;">Czas (godziny):</label>
+                    <input type="number" id="hours" value="2" min="0">
+                    
+                    <label style="font-size: 12px;">Jakość (0-1):</label>
+                    <input type="number" id="quality" value="0.9" min="0" max="1" step="0.1">
+                    
+                    <label style="font-size: 12px;">Satysfakcja (0-1):</label>
+                    <input type="number" id="satisfaction" value="0.95" min="0" max="1" step="0.05">
+                    
+                    <button onclick="calculateHC()" style="background: #10b981; color: white; padding: 8px 15px; border: none; border-radius: 6px; margin-top: 10px; cursor: pointer; width: 100%; font-weight: 600;">Oblicz</button>
+                    
+                    <div class="demo-result" id="hcResult" style="display: none; margin-top: 10px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<footer>
+    P2P 60-24 OneClick Evo — System Understanding · 2026 · 
+    <a href="#" onclick="alert('Koniec strony'); return false;" style="color: #4ade80; text-decoration: none;">↑ Scroll up</a>
+</footer>
+
+<script>
+    function switchTab(tabName) {
+        // Hide all tabs
+        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        
+        // Show selected tab
+        document.getElementById(`tab-${tabName}`).classList.add('active');
+        event.target.classList.add('active');
+        
+        // Scroll to top
+        window.scrollTo(0, 0);
+    }
+
+    function calculateTrust() {
+        const events = parseInt(document.getElementById('events').value);
+        const days = parseInt(document.getElementById('days').value);
+        const profileWeight = parseFloat(document.getElementById('profile').value);
+        
+        const lambda = 0.02 / 365; // roczny decay na dzień
+        const decay = Math.exp(-lambda * days);
+        const eventValue = 0.05; // każde zdarzenie +0.05
+        
+        let trustMetric = (events * eventValue) * decay * profileWeight;
+        trustMetric = Math.min(trustMetric, 1.0); // max 1.0
+        trustMetric = Math.max(trustMetric, 0.0); // min 0.0
+        
+        const result = document.getElementById('trustResult');
+        result.style.display = 'block';
+        result.innerHTML = `
+            <strong>TrustMetric: ${trustMetric.toFixed(3)}</strong><br>
+            Decay: ${decay.toFixed(3)} · Waga profilu: ${profileWeight}<br>
+            Status: ${trustMetric > 0.7 ? '✓ Wysokie' : trustMetric > 0.4 ? '△ Średnie' : '✗ Niskie'}
+        `;
+    }
+
+    function calculateHC() {
+        const hours = parseFloat(document.getElementById('hours').value);
+        const quality = parseFloat(document.getElementById('quality').value);
+        const satisfaction = parseFloat(document.getElementById('satisfaction').value);
+        
+        const hc = hours * quality * satisfaction;
+        
+        const result = document.getElementById('hcResult');
+        result.style.display = 'block';
+        result.innerHTML = `
+            <strong>HappyCoin: ${hc.toFixed(2)} HC</strong><br>
+            ${hours}h × ${quality} × ${satisfaction} = ${hc.toFixed(3)}<br>
+            Typ: Wymiana rzeczywistej wartości
+        `;
+    }
+</script>
+
+</body>
+</html>

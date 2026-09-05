@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P2P 60-24 — Multi-Layer Navigator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            min-height: 100vh;
+            display: flex;
+        }
+
+        /* SIDEBAR NAVIGATION */
+        .sidebar {
+            width: 240px;
+            background: #1e293b;
+            border-right: 1px solid #334155;
+            padding: 20px;
+            overflow-y: auto;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+        }
+
+        .sidebar h2 {
+            font-size: 14px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+            margin-top: 20px;
+        }
+
+        .sidebar h2:first-child {
+            margin-top: 0;
+        }
+
+        .nav-item {
+            padding: 12px;
+            margin-bottom: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-left: 3px solid transparent;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-item.active {
+            background: rgba(16, 185, 129, 0.15);
+            border-left-color: #10b981;
+            color: #10b981;
+            font-weight: 600;
+        }
+
+        /* MAIN CONTENT */
+        .main {
+            margin-left: 240px;
+            padding: 30px;
+            width: calc(100% - 240px);
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        /* BREADCRUMB */
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 30px;
+            font-size: 13px;
+            color: #94a3b8;
+        }
+
+        .breadcrumb span {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .breadcrumb .separator {
+            color: #64748b;
+        }
+
+        .breadcrumb a {
+            color: #10b981;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        /* CONTENT AREAS */
+        .view {
+            display: none;
+        }
+
+        .view.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* LAYER 1: DASHBOARD */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .card:hover {
+            border-color: #64748b;
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+
+        .card-title {
+            font-size: 14px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .card-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #4ade80;
+            margin-bottom: 8px;
+        }
+
+        .card-desc {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        /* LAYER 2: DETAIL VIEWS */
+        .detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .detail-header h1 {
+            font-size: 32px;
+        }
+
+        .btn-back {
+            padding: 8px 16px;
+            background: #64748b;
+            border: none;
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .btn-back:hover {
+            background: #475569;
+        }
+
+        /* LIST ITEMS */
+        .list-item {
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .list-item:hover {
+            background: rgba(30, 41, 59, 0.9);
+            border-color: #64748b;
+        }
+
+        .list-item-content {
+            flex: 1;
+        }
+
+        .list-item-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .list-item-meta {
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        .list-item-action {
+            color: #10b981;
+            font-size: 20px;
+        }
+
+        /* LAYER 3: DETAILED VIEW */
+        .detail-content {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 800px;
+        }
+
+        .detail-row {
+            margin-bottom: 24px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid #334155;
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            font-size: 11px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        .detail-value {
+            font-size: 16px;
+            color: #e2e8f0;
+            line-height: 1.6;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        /* STATISTICS TABLE */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .stat-box {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 12px;
+            border-radius: 6px;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #94a3b8;
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #4ade80;
+        }
+
+        /* EMPTY STATE */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .empty-state-text {
+            color: #94a3b8;
+        }
+
+        /* FOOTER */
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #334155;
+            font-size: 12px;
+            color: #64748b;
+            text-align: center;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 200px;
+            }
+
+            .main {
+                margin-left: 200px;
+                width: calc(100% - 200px);
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                position: fixed;
+                z-index: 100;
+                width: 200px;
+                transition: transform 0.3s;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main {
+                margin-left: 0;
+                width: 100%;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar" id="sidebar">
+        <h2>🌐 Węzeł Kraków</h2>
+        <div class="nav-item active" onclick="showView('dashboard')">Dashboard</div>
+
+        <h2>🔍 Odkrywaj</h2>
+        <div class="nav-item" onclick="showView('network')">Sieć & Węzły</div>
+        <div class="nav-item" onclick="showView('bonds')">RealBonds</div>
+        <div class="nav-item" onclick="showView('reputation')">Reputacja</div>
+        <div class="nav-item" onclick="showView('exchange')">Wymiana</div>
+        <div class="nav-item" onclick="showView('modules')">Moduły</div>
+        <div class="nav-item" onclick="showView('health')">Zdrowotność</div>
+
+        <h2>⚙️ System</h2>
+        <div class="nav-item" onclick="toggleStart()">▶ Start</div>
+        <div class="nav-item" onclick="toggleStop()">⏹ Stop</div>
+        <div class="nav-item" onclick="toggleAuto()">⚙ Auto</div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main">
+
+        <!-- BREADCRUMB -->
+        <div class="breadcrumb" id="breadcrumb">
+            <span><a onclick="showView('dashboard')">Dashboard</a></span>
+        </div>
+
+        <!-- LAYER 1: DASHBOARD -->
+        <div class="view active" id="dashboard">
+            <h1 style="margin-bottom: 30px;">🌐 Węzeł P2P Kraków</h1>
+
+            <div class="dashboard-grid">
+                <div class="card" onclick="drillDown('network')">
+                    <div class="card-icon">🌐</div>
+                    <div class="card-title">Sieć Zaufania</div>
+                    <div class="card-value">12</div>
+                    <div class="card-desc">węzłów • 3 kręgi • Aktywna</div>
+                </div>
+
+                <div class="card" onclick="drillDown('bonds')">
+                    <div class="card-icon">💰</div>
+                    <div class="card-title">RealBonds</div>
+                    <div class="card-value">47</div>
+                    <div class="card-desc">zobowiązań • 8 transferów • OK</div>
+                </div>
+
+                <div class="card" onclick="drillDown('reputation')">
+                    <div class="card-icon">🎖️</div>
+                    <div class="card-title">Reputacja</div>
+                    <div class="card-value">0.82</div>
+                    <div class="card-desc">TrustMetric • +12% wzrost</div>
+                </div>
+
+                <div class="card" onclick="drillDown('exchange')">
+                    <div class="card-icon">🔄</div>
+                    <div class="card-title">Wymiana</div>
+                    <div class="card-value">5</div>
+                    <div class="card-desc">oczekujące • 2 w toku</div>
+                </div>
+
+                <div class="card" onclick="drillDown('modules')">
+                    <div class="card-icon">⚡</div>
+                    <div class="card-title">Moduły</div>
+                    <div class="card-value">7</div>
+                    <div class="card-desc">aktywne • 2 developing</div>
+                </div>
+
+                <div class="card" onclick="drillDown('health')">
+                    <div class="card-icon">📊</div>
+                    <div class="card-title">Zdrowotność</div>
+                    <div class="card-value">Stable</div>
+                    <div class="card-desc">CPU 35% • RAM 42%</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- LAYER 2: NETWORK -->
+        <div class="view" id="network">
+            <div class="detail-header">
+                <h1>🌐 Sieć Zaufania</h1>
+                <button class="btn-back" onclick="showView('dashboard')">← Wróć</button>
+            </div>
+
+            <div class="list-item" onclick="drillToNode('kraków')">
+                <div class="list-item-content">
+                    <div class="list-item-title">🏠 Kraków (Ja)</div>
+                    <div class="list-item-meta">TrustMetric: 0.82 • Krąg 1 (Core)</div>
+                </div>
+                <div class="list-item-action">→</div>
+            </div>
+
+            <div class="list-item" onclick="drillToNode('zofia')">
+                <div class="list-item-content">
+                    <div class="list-item-title">👤 Zofia Warszawa</div>
+                    <div class="list-item-meta">TrustMetric: 0.88 • Krąg 1 (Core) • Połączenie: bezpośrednie</div>
+                </div>
+                <div class="list-item-action">→</div>
+            </div>
+
+            <div class="list-item" onclick="drillToNode('marek')">
+                <div class="list-item-content">
+                    <div class="list-item-title">👤 Marek Gdańsk</div>
+                    <div class="list-item-meta">TrustMetric: 0.71 • Krąg 2 (Close) • Połączenie: 2 hopy</div>
+                </div>
+                <div class="list-item-action">→</div>
+            </div>
+
+            <div class="list-item" onclick="drillToNode('anna')">
+                <div class="list-item-content">
+                    <div class="list-item-title">👤 Anna Wrocław</div>
+                    <div class="list-item-meta">TrustMetric: 0.55 • Krąg 3 (Extended) • Połączenie: 3 hopy</div>
+                </div>
+                <div class="list-item-action">→</div>
+            </div>
+        </div>
+
+        <!-- LAYER 3: NODE DETAIL -->
+        <div class="view" id="node-detail">
+            <div class="detail-header">
+                <h1 id="nodeDetailTitle">Szczegóły węzła</h1>
+                <button class="btn-back" onclick="showView('network')">← Wróć do Sieci</button>
+            </div>
+
+            <div class="detail-content" id="nodeDetailContent"></div>
+        </div>
+
+        <!-- LAYER 2: BONDS -->
+        <div class="view" id="bonds">
+            <div class="detail-header">
+                <h1>💰 Moje RealBonds</h1>
+                <button class="btn-back" onclick="showView('dashboard')">← Wróć</button>
+            </div>
+
+            <div class="list-item" onclick="drillToBond('bond-001')">
+                <div class="list-item-content">
+                    <div class="list-item-title">Rower górski</div>
+                    <div class="list-item-meta">Marek • Transferuje się • 2026-04-20</div>
+                </div>
+                <div class="list-item-action">→</div>
+            </div>
+
+            <div class="list-item" onclick="drillToBond('bond-002')">
+                <div class="list-item-content">
+                    <div class="list-item-title">20h pracy konsultacyjnej</div>
+                    <div class="list-item-meta">Zofia • Rozpuszczony (zaegzekwowany) • 2026-04-18</div>
+                </div>
+                <div class="list-item-action">→</div>
+            </div>
+
+            <div class="list-item" onclick="drillToBond('bond-003')">
+                <div class="list-item-content">
+                    <div class="list-item-title">200 PLN długu</div>
+                    <div class="list-item-meta">Anna • Aktywny • Stawka: 2% roczny decay</div>
+                </div>
+                <div class="list-item-action">→</div>
+            </div>
+        </div>
+
+        <!-- LAYER 3: BOND DETAIL -->
+        <div class="view" id="bond-detail">
+            <div class="detail-header">
+                <h1 id="bondDetailTitle">Szczegóły RealBond</h1>
+                <button class="btn-back" onclick="showView('bonds')">← Wróć do RealBonds</button>
+            </div>
+
+            <div class="detail-content" id="bondDetailContent"></div>
+        </div>
+
+        <!-- LAYER 2: REPUTATION -->
+        <div class="view" id="reputation">
+            <div class="detail-header">
+                <h1>🎖️ Moja Reputacja</h1>
+                <button class="btn-back" onclick="showView('dashboard')">← Wróć</button>
+            </div>
+
+            <div class="detail-content">
+                <div class="detail-row">
+                    <div class="detail-label">TrustMetric (główny)</div>
+                    <div class="detail-value">0.82 <span class="status-badge">+12% wzrost</span></div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">Model Decay</div>
+                    <div class="detail-value">Profil mieszany • 2% roczny • Aktywność podtrzymuje</div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">Ostatnie zdarzenia</div>
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="stat-label">Pozytywne (ostatni miesiąc)</div>
+                            <div class="stat-value">+0.05</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Negatywne (ostatni miesiąc)</div>
+                            <div class="stat-value">-0.02</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">Kręgi zaufania (Dunbar)</div>
+                    <div class="detail-value">
+                        Krąg 1 (Core): 5/5 ✓<br>
+                        Krąg 2 (Close): 12/15 ✓<br>
+                        Krąg 3 (Extended): 28/50 ✓
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- LAYER 2: EXCHANGE -->
+        <div class="view" id="exchange">
+            <div class="detail-header">
+                <h1>🔄 Wymiana & Transakcje</h1>
+                <button class="btn-back" onclick="showView('dashboard')">← Wróć</button>
+            </div>
+
+            <div class="list-item">
+                <div class="list-item-content">
+                    <div class="list-item-title">Oczekujące (5)</div>
+                    <div class="list-item-meta">Propozycje czekające na Twoją akcję</div>
+                </div>
+                <div class="list-item-action">→</div>
+            </div>
+
+            <div class="list-item">
+                <div class="list-item-content">
+                    <div class="list-item-title">W toku (2)</div>
+                    <div class="list-item-meta">20h konsultacji • Wymiana Książka→Rower</div>
+                </div>
+                <div class="list-item-action">→</div>
+            </div>
+
+            <div class="list-item">
+                <div class="list-item-content">
+                    <div class="list-item-title">Czekające na partnera (1)</div>
+                    <div class="list-item-meta">Partner offline • Auto-retry za 30min</div>
+                </div>
+                <div class="list-item-action">→</div>
+            </div>
+        </div>
+
+        <!-- LAYER 2: MODULES -->
+        <div class="view" id="modules">
+            <div class="detail-header">
+                <h1>⚡ Moduły Systemowe</h1>
+                <button class="btn-back" onclick="showView('dashboard')">← Wróć</button>
+            </div>
+
+            <div class="list-item">
+                <div class="list-item-content">
+                    <div class="list-item-title">kernel (core dispatcher)</div>
+                    <div class="list-item-meta"><span class="status-badge">Stable</span> • Uptime: 47h</div>
+                </div>
+                <div class="list-item-action">→</div>
+            </div>
+
+            <div class="list-item">
+                <div class="list-item-content">
+                    <div class="list-item-title">trust.mod (Web of Trust)</div>
+                    <div class="list-item-meta"><span class="status-badge">Stable</span> • v1.0</div>
+                </div>
+                <div class="list-item-action">→</div>
+            </div>
+
+            <div class="list-item">
+                <div class="list-item-content">
+                    <div class="list-item-title">crypto.mod (Ed25519 identity)</div>
+                    <div class="list-item-meta"><span style="background: rgba(139, 92, 246, 0.15); color: #8b5cf6;" class="status-badge">Emerging</span> • 75% ready</div>
+                </div>
+                <div class="list-item-action">→</div>
+            </div>
+
+            <div class="list-item">
+                <div class="list-item-content">
+                    <div class="list-item-title">ui.mod (web dashboard)</div>
+                    <div class="list-item-meta"><span style="background: rgba(139, 92, 246, 0.15); color: #8b5cf6;" class="status-badge">Emerging</span> • 45% ready</div>
+                </div>
+                <div class="list-item-action">→</div>
+            </div>
+        </div>
+
+        <!-- LAYER 2: HEALTH -->
+        <div class="view" id="health">
+            <div class="detail-header">
+                <h1>📊 Zdrowotność Węzła</h1>
+                <button class="btn-back" onclick="showView('dashboard')">← Wróć</button>
+            </div>
+
+            <div class="detail-content">
+                <div class="detail-row">
+                    <div class="detail-label">Model S/I/R/E</div>
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="stat-label">S (Stable)</div>
+                            <div class="stat-value">5 ✓</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">I (Ill)</div>
+                            <div class="stat-value">0 ✓</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">R (Recovery)</div>
+                            <div class="stat-value">0 ✓</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">E (Emerging)</div>
+                            <div class="stat-value">2 ✓</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">Zasoby systemowe</div>
+                    <div class="detail-value">
+                        CPU: 35% (używane)<br>
+                        RAM: 42% (420 MB z 1 GB)<br>
+                        Dysk: 18% (utilizacja)
+                    </div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">Ostatnia synchronizacja</div>
+                    <div class="detail-value">2 minuty temu</div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">Sleep schedule</div>
+                    <div class="detail-value">Aktywny • Następny sleep za 4h</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            P2P 60-24 OneClick Evo v1.0 · Kraków · 2026 · Offline-first • Decentralized • Modular
+        </div>
+
+    </div>
+
+    <script>
+        // STATE MANAGEMENT
+        let currentView = 'dashboard';
+        let currentBreadcrumb = ['Dashboard'];
+        let systemRunning = true;
+
+        // NAVIGATION FUNCTIONS
+        function showView(view) {
+            // Hide all views
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            
+            // Show selected view
+            document.getElementById(view).classList.add('active');
+            
+            // Update sidebar
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            event?.target?.classList.add('active');
+            
+            // Update breadcrumb
+            if (view === 'dashboard') {
+                updateBreadcrumb(['Dashboard']);
+            }
+            
+            currentView = view;
+        }
+
+        function drillDown(section) {
+            showView(section);
+            updateBreadcrumb(['Dashboard', section.charAt(0).toUpperCase() + section.slice(1)]);
+        }
+
+        function drillToNode(nodeName) {
+            const nodes = {
+                'kraków': {
+                    name: '🏠 Ja (Kraków)',
+                    trustmetric: '0.82',
+                    krąg: 'Core (1)',
+                    status: 'Aktywny',
+                    info: 'To jest Ty. Twój węzeł operacyjny.'
+                },
+                'zofia': {
+                    name: '👤 Zofia Warszawa',
+                    trustmetric: '0.88',
+                    krąg: 'Core (1)',
+                    status: 'Aktywna',
+                    info: 'Bezpośrednia relacja. Współpraca od 3 lat.'
+                },
+                'marek': {
+                    name: '👤 Marek Gdańsk',
+                    trustmetric: '0.71',
+                    krąg: 'Close (2)',
+                    status: 'Aktywny',
+                    info: 'Poznany przez Zofię. Rekomendacja 5 miesięcy temu.'
+                },
+                'anna': {
+                    name: '👤 Anna Wrocław',
+                    trustmetric: '0.55',
+                    krąg: 'Extended (3)',
+                    status: 'Aktywna',
+                    info: 'Poznana przez Marka. W sieci od 2 miesięcy.'
+                }
+            };
+
+            const node = nodes[nodeName];
+            document.getElementById('nodeDetailTitle').textContent = node.name;
+            document.getElementById('nodeDetailContent').innerHTML = `
+                <div class="detail-row">
+                    <div class="detail-label">TrustMetric</div>
+                    <div class="detail-value">${node.trustmetric}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Krąg Zaufania</div>
+                    <div class="detail-value">${node.krąg}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Status</div>
+                    <div class="detail-value"><span class="status-badge">${node.status}</span></div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">O węźle</div>
+                    <div class="detail-value">${node.info}</div>
+                </div>
+            `;
+            
+            showView('node-detail');
+            updateBreadcrumb(['Dashboard', 'Sieć Zaufania', node.name]);
+        }
+
+        function drillToBond(bondId) {
+            const bonds = {
+                'bond-001': {
+                    name: 'Rower górski',
+                    owner: 'Marek',
+                    status: 'Transferuje się',
+                    date: '2026-04-20',
+                    hash: 'a7f3e2c1...',
+                    notes: 'Historia właścicielów: Ja → Marek'
+                },
+                'bond-002': {
+                    name: '20h pracy konsultacyjnej',
+                    owner: 'Zofia',
+                    status: 'Rozpuszczony',
+                    date: '2026-04-18',
+                    hash: 'b4f9e5d2...',
+                    notes: 'Windykacja społeczna - zaegzekwowany przez Krąg 2'
+                },
+                'bond-003': {
+                    name: '200 PLN długu',
+                    owner: 'Anna',
+                    status: 'Aktywny',
+                    date: '2026-04-15',
+                    hash: 'c8f1e9a4...',
+                    notes: 'Decay: 2% roczny • Ostatnie potwierdzenie: 3 dni temu'
+                }
+            };
+
+            const bond = bonds[bondId];
+            document.getElementById('bondDetailTitle').textContent = bond.name;
+            document.getElementById('bondDetailContent').innerHTML = `
+                <div class="detail-row">
+                    <div class="detail-label">Właściciel/Wierzyciel</div>
+                    <div class="detail-value">${bond.owner}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Status</div>
+                    <div class="detail-value"><span class="status-badge">${bond.status}</span></div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Data</div>
+                    <div class="detail-value">${bond.date}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Hash (kryptograficzny)</div>
+                    <div class="detail-value"><code>${bond.hash}</code></div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Notatki</div>
+                    <div class="detail-value">${bond.notes}</div>
+                </div>
+            `;
+            
+            showView('bond-detail');
+            updateBreadcrumb(['Dashboard', 'RealBonds', bond.name]);
+        }
+
+        function updateBreadcrumb(crumbs) {
+            const breadcrumb = document.getElementById('breadcrumb');
+            breadcrumb.innerHTML = crumbs.map((crumb, i) => {
+                if (i === crumbs.length - 1) {
+                    return `<span>${crumb}</span>`;
+                }
+                return `<span><a onclick="showView('dashboard')">${crumb}</a> <span class="separator">›</span></span>`;
+            }).join('');
+        }
+
+        // SYSTEM CONTROLS
+        function toggleStart() {
+            systemRunning = true;
+            alert('✅ NODE STARTED');
+        }
+
+        function toggleStop() {
+            systemRunning = false;
+            alert('⏹️ NODE STOPPED');
+        }
+
+        function toggleAuto() {
+            alert('⚙️ AUTO MODE TOGGLED');
+        }
+    </script>
+
+</body>
+</html>

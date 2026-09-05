@@ -1,0 +1,1233 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P2P 60-24 — Multi-layer Navigation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+
+        /* SIDEBAR NAV */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 240px;
+            height: 100vh;
+            background: rgba(15, 23, 42, 0.95);
+            border-right: 1px solid #334155;
+            padding: 20px;
+            overflow-y: auto;
+            backdrop-filter: blur(10px);
+        }
+
+        .sidebar-logo {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 30px;
+            color: #4ade80;
+        }
+
+        .nav-item {
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+            font-size: 14px;
+        }
+
+        .nav-item:hover {
+            background: rgba(100, 116, 139, 0.2);
+            border-left-color: #64748b;
+        }
+
+        .nav-item.active {
+            background: rgba(16, 185, 129, 0.1);
+            border-left-color: #10b981;
+            color: #10b981;
+            font-weight: 600;
+        }
+
+        /* MAIN CONTENT */
+        .main {
+            margin-left: 240px;
+            padding: 30px;
+            min-height: 100vh;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        /* TOP BAR */
+        .top-bar {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .top-bar h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .top-bar-breadcrumb {
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        .top-bar-controls {
+            display: flex;
+            gap: 12px;
+        }
+
+        /* BUTTONS */
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #059669;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #6366f1;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #4f46e5;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        /* GRID & CARDS */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+        }
+
+        .card:hover {
+            border-color: #64748b;
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 16px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .card-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .card-badge.warning {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .card-content {
+            font-size: 14px;
+            color: #cbd5e1;
+            line-height: 1.6;
+        }
+
+        .card-meta {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #334155;
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        /* TABLE */
+        .table-container {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid #334155;
+            border-radius: 12px;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: rgba(15, 23, 42, 0.5);
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 12px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            border-bottom: 1px solid #334155;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #334155;
+            font-size: 14px;
+        }
+
+        tr:hover {
+            background: rgba(100, 116, 139, 0.1);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge-green {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+
+        .badge-yellow {
+            background: rgba(234, 179, 8, 0.2);
+            color: #eab308;
+        }
+
+        .badge-red {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        /* STATS */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-box {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #4ade80;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #94a3b8;
+            text-transform: uppercase;
+        }
+
+        /* MODAL */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .modal-header h2 {
+            font-size: 24px;
+        }
+
+        .modal-close {
+            background: #64748b;
+            color: white;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .modal-detail {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #334155;
+        }
+
+        .modal-detail:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            font-size: 12px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .detail-value {
+            font-size: 15px;
+            color: #e2e8f0;
+        }
+
+        /* STATUS INDICATOR */
+        .indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .indicator.active {
+            background: #10b981;
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+        }
+
+        .indicator.inactive {
+            background: #64748b;
+        }
+
+        .indicator.warning {
+            background: #eab308;
+            box-shadow: 0 0 8px rgba(234, 179, 8, 0.5);
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 200px;
+            }
+
+            .main {
+                margin-left: 200px;
+                padding: 15px;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-row {
+                grid-template-columns: 1fr;
+            }
+
+            .top-bar {
+                flex-direction: column;
+                gap: 15px;
+                align-items: flex-start;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .sidebar {
+                position: absolute;
+                width: 100%;
+                height: auto;
+                border-bottom: 1px solid #334155;
+                border-right: none;
+            }
+
+            .main {
+                margin-left: 0;
+                margin-top: 120px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <div class="sidebar-logo">🌐 P2P 60-24</div>
+        
+        <div class="nav-item active" onclick="switchPage('dashboard')">
+            📊 Dashboard
+        </div>
+        <div class="nav-item" onclick="switchPage('nodes')">
+            🌍 Węzły (Nodes)
+        </div>
+        <div class="nav-item" onclick="switchPage('bonds')">
+            💰 RealBonds
+        </div>
+        <div class="nav-item" onclick="switchPage('modules')">
+            ⚡ Moduły
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main">
+
+        <!-- PAGE 1: DASHBOARD -->
+        <div class="page active" id="page-dashboard">
+            <div class="top-bar">
+                <div>
+                    <h1>📊 Dashboard</h1>
+                    <div class="top-bar-breadcrumb">P2P 60-24 › Dashboard</div>
+                </div>
+                <div class="top-bar-controls">
+                    <button class="btn-primary" onclick="startSystem()">▶ START</button>
+                    <button class="btn-danger" onclick="stopSystem()">⏹ STOP</button>
+                </div>
+            </div>
+
+            <div class="stats-row">
+                <div class="stat-box">
+                    <div class="stat-value" id="stat-trust">0.82</div>
+                    <div class="stat-label">TrustMetric</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="stat-nodes">12</div>
+                    <div class="stat-label">Węzłów w sieci</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="stat-bonds">47</div>
+                    <div class="stat-label">RealBonds</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="stat-modules">7</div>
+                    <div class="stat-label">Modułów aktywnych</div>
+                </div>
+            </div>
+
+            <h2 style="margin: 30px 0 20px; font-size: 20px;">Szybki Przegląd</h2>
+            <div class="grid">
+                <div class="card" onclick="switchPage('nodes')">
+                    <div class="card-header">
+                        <div class="card-title">🌍 Sieć Zaufania</div>
+                        <span class="card-badge">Aktywna</span>
+                    </div>
+                    <div class="card-content">
+                        <strong>12 węzłów</strong> w DAG<br>
+                        3 kręgi Dunbar<br>
+                        Synchronizacja: 2 min. temu
+                    </div>
+                    <div class="card-meta">Kliknij aby zobaczyć szczegóły węzłów →</div>
+                </div>
+
+                <div class="card" onclick="switchPage('bonds')">
+                    <div class="card-header">
+                        <div class="card-title">💰 RealBonds</div>
+                        <span class="card-badge">OK</span>
+                    </div>
+                    <div class="card-content">
+                        <strong>47 zobowiązań</strong><br>
+                        8 transferów w toku<br>
+                        2 rozpuszczone
+                    </div>
+                    <div class="card-meta">Kliknij aby zobaczyć transakcje →</div>
+                </div>
+
+                <div class="card" onclick="switchPage('modules')">
+                    <div class="card-header">
+                        <div class="card-title">⚡ Moduły</div>
+                        <span class="card-badge">7 aktywnych</span>
+                    </div>
+                    <div class="card-content">
+                        <strong>5 stable</strong><br>
+                        2 developing<br>
+                        CPU: 35% • RAM: 42%
+                    </div>
+                    <div class="card-meta">Kliknij aby zarządzać modułami →</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">🎖️ Reputacja</div>
+                        <span class="card-badge">+12%</span>
+                    </div>
+                    <div class="card-content">
+                        <strong>Wzrost reputacji</strong><br>
+                        Decay: 2% roczny<br>
+                        Core: 5/5 • Close: 12/15
+                    </div>
+                    <div class="card-meta">Historia zobowiązań wpływa na TrustMetric</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">🔄 Wymiana</div>
+                        <span class="card-badge warning">5 pending</span>
+                    </div>
+                    <div class="card-content">
+                        <strong>5 oczekujących</strong><br>
+                        2 w toku<br>
+                        1 czeka na partnera
+                    </div>
+                    <div class="card-meta">Wymaga Twojej akcji</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">📊 Status</div>
+                        <span class="card-badge">Stabilny</span>
+                    </div>
+                    <div class="card-content">
+                        <span class="indicator active"></span>Aktywny<br>
+                        S/I/R/E: OK<br>
+                        Uptime: 47h 32m
+                    </div>
+                    <div class="card-meta">Węzeł działa prawidłowo</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAGE 2: NODES -->
+        <div class="page" id="page-nodes">
+            <div class="top-bar">
+                <div>
+                    <h1>🌍 Węzły w Sieci</h1>
+                    <div class="top-bar-breadcrumb">P2P 60-24 › Węzły</div>
+                </div>
+                <div class="top-bar-controls">
+                    <button class="btn-secondary">🔄 Synchronizuj</button>
+                </div>
+            </div>
+
+            <div class="stats-row">
+                <div class="stat-box">
+                    <div class="stat-value">12</div>
+                    <div class="stat-label">Węzłów aktywnych</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value">3</div>
+                    <div class="stat-label">Kręgi Dunbar</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value">Depth 4</div>
+                    <div class="stat-label">DAG głębokość</div>
+                </div>
+            </div>
+
+            <h2 style="margin: 30px 0 20px; font-size: 20px;">Lista Węzłów</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Węzeł</th>
+                            <th>TrustMetric</th>
+                            <th>Kręg</th>
+                            <th>Status</th>
+                            <th>Ostatnia sync</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Kraków (Ty)</strong></td>
+                            <td>0.82</td>
+                            <td>Core</td>
+                            <td><span class="badge badge-green">Aktywny</span></td>
+                            <td>Teraz</td>
+                        </tr>
+                        <tr>
+                            <td>Marek (Rower)</td>
+                            <td>0.92</td>
+                            <td>Core</td>
+                            <td><span class="badge badge-green">Aktywny</span></td>
+                            <td>2 min</td>
+                        </tr>
+                        <tr>
+                            <td>Zofia (Konsultacja)</td>
+                            <td>0.88</td>
+                            <td>Core</td>
+                            <td><span class="badge badge-green">Aktywny</span></td>
+                            <td>5 min</td>
+                        </tr>
+                        <tr>
+                            <td>Jan (Sąsiad)</td>
+                            <td>0.65</td>
+                            <td>Close</td>
+                            <td><span class="badge badge-green">Aktywny</span></td>
+                            <td>15 min</td>
+                        </tr>
+                        <tr>
+                            <td>Kasia (Przyjaciel)</td>
+                            <td>0.71</td>
+                            <td>Close</td>
+                            <td><span class="badge badge-yellow">Sleep</span></td>
+                            <td>2h</td>
+                        </tr>
+                        <tr>
+                            <td>Piotr (Kontakt)</td>
+                            <td>0.55</td>
+                            <td>Extended</td>
+                            <td><span class="badge badge-yellow">Offline</span></td>
+                            <td>12h</td>
+                        </tr>
+                        <tr>
+                            <td>Anna (Biznesmeni)</td>
+                            <td>0.42</td>
+                            <td>Extended</td>
+                            <td><span class="badge badge-green">Aktywny</span></td>
+                            <td>30 min</td>
+                        </tr>
+                        <tr>
+                            <td>Tomek (Hobby)</td>
+                            <td>0.61</td>
+                            <td>Extended</td>
+                            <td><span class="badge badge-green">Aktywny</span></td>
+                            <td>1h</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h2 style="margin: 30px 0 20px; font-size: 20px;">Statystyki Sieciowe</h2>
+            <div class="grid">
+                <div class="card">
+                    <div class="card-title">Krąg 1 (Core) — Dunbar 5</div>
+                    <div class="card-content" style="margin-top: 12px;">
+                        <strong>3/5 zainstalowanych</strong><br>
+                        • Marek (TrustMetric: 0.92)<br>
+                        • Zofia (TrustMetric: 0.88)<br>
+                        • Ty (TrustMetric: 0.82)
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">Krąg 2 (Close) — Dunbar 15</div>
+                    <div class="card-content" style="margin-top: 12px;">
+                        <strong>12/15 zainstalowanych</strong><br>
+                        Średni TrustMetric: 0.68<br>
+                        Czeka: 3 zaproszenia
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">Krąg 3 (Extended) — Dunbar 50</div>
+                    <div class="card-content" style="margin-top: 12px;">
+                        <strong>28/50 zainstalowanych</strong><br>
+                        Średni TrustMetric: 0.52<br>
+                        Potencjał: 22 potencjalnych
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAGE 3: BONDS -->
+        <div class="page" id="page-bonds">
+            <div class="top-bar">
+                <div>
+                    <h1>💰 RealBonds (Zobowiązania)</h1>
+                    <div class="top-bar-breadcrumb">P2P 60-24 › RealBonds</div>
+                </div>
+                <div class="top-bar-controls">
+                    <button class="btn-primary">➕ Nowe zobowiązanie</button>
+                </div>
+            </div>
+
+            <div class="stats-row">
+                <div class="stat-box">
+                    <div class="stat-value">47</div>
+                    <div class="stat-label">Razem zobowiązań</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value">8</div>
+                    <div class="stat-label">W trakcie transferu</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value">2</div>
+                    <div class="stat-label">Rozpuszczone</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value">37</div>
+                    <div class="stat-label">Historia (archiwum)</div>
+                </div>
+            </div>
+
+            <h2 style="margin: 30px 0 20px; font-size: 20px;">Aktywne Zobowiązania</h2>
+            <div class="grid">
+                <div class="card" onclick="showBondDetail('001')">
+                    <div class="card-header">
+                        <div class="card-title">RealBond #001</div>
+                        <span class="card-badge">Transferuje</span>
+                    </div>
+                    <div class="card-content">
+                        <strong>Rower górski</strong><br>
+                        Od: Ty<br>
+                        Do: Marek<br>
+                        Status: Czeka potwierdzenia
+                    </div>
+                    <div class="card-meta">Hash: 7f3d... • Podpis: ✓ obie strony</div>
+                </div>
+
+                <div class="card" onclick="showBondDetail('002')">
+                    <div class="card-header">
+                        <div class="card-title">RealBond #002</div>
+                        <span class="card-badge">Aktywne</span>
+                    </div>
+                    <div class="card-content">
+                        <strong>20h konsultacji</strong><br>
+                        Wierzyciel: Zofia<br>
+                        Status: 75% zrealizowane<br>
+                        Termin: 2026-05-15
+                    </div>
+                    <div class="card-meta">Hash: a2c8... • Kompromis: brak</div>
+                </div>
+
+                <div class="card" onclick="showBondDetail('003')">
+                    <div class="card-header">
+                        <div class="card-title">RealBond #003</div>
+                        <span class="card-badge warning">Czeka</span>
+                    </div>
+                    <div class="card-content">
+                        <strong>Książka: Homo Sapiens</strong><br>
+                        Do: Jan<br>
+                        Status: Partner offline<br>
+                        Retry: za 30 min
+                    </div>
+                    <div class="card-meta">Hash: 5e1f... • Podpis: czeka Jan</div>
+                </div>
+
+                <div class="card" onclick="showBondDetail('004')">
+                    <div class="card-header">
+                        <div class="card-title">RealBond #004</div>
+                        <span class="card-badge">Rozpuszczone</span>
+                    </div>
+                    <div class="card-content">
+                        <strong>10h pracy handlowej</strong><br>
+                        Wierzyciel: Anna<br>
+                        Rozegzekwowane: TAK<br>
+                        Data: 2026-04-10
+                    </div>
+                    <div class="card-meta">Windykacja społeczna w Krąg 2</div>
+                </div>
+
+                <div class="card" onclick="showBondDetail('005')">
+                    <div class="card-header">
+                        <div class="card-title">RealBond #005</div>
+                        <span class="card-badge">Aktywne</span>
+                    </div>
+                    <div class="card-content">
+                        <strong>Wymiana: Pielęgnacja ogrodu</strong><br>
+                        Wymiana z: Tomek<br>
+                        Status: Planowana<br>
+                        Data: 2026-05-10
+                    </div>
+                    <div class="card-meta">Hash: c4b9... • Profil: sąsiedzki</div>
+                </div>
+
+                <div class="card" onclick="showBondDetail('006')">
+                    <div class="card-header">
+                        <div class="card-title">RealBond #006</div>
+                        <span class="card-badge">Aktywne</span>
+                    </div>
+                    <div class="card-content">
+                        <strong>Mentoring: PHP basics</strong><br>
+                        Dla: Kasia<br>
+                        Status: 25% zrealizowane<br>
+                        Sesje: 2/8
+                    </div>
+                    <div class="card-meta">Hash: 9d2e... • Podpis: ✓ obie strony</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAGE 4: MODULES -->
+        <div class="page" id="page-modules">
+            <div class="top-bar">
+                <div>
+                    <h1>⚡ Moduły Systemowe</h1>
+                    <div class="top-bar-breadcrumb">P2P 60-24 › Moduły</div>
+                </div>
+                <div class="top-bar-controls">
+                    <button class="btn-secondary">📦 Zainstaluj moduł</button>
+                </div>
+            </div>
+
+            <div class="stats-row">
+                <div class="stat-box">
+                    <div class="stat-value">7</div>
+                    <div class="stat-label">Moduły aktywne</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value">2</div>
+                    <div class="stat-label">W desenvolvimento</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value">35%</div>
+                    <div class="stat-label">CPU usage</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value">42%</div>
+                    <div class="stat-label">RAM usage</div>
+                </div>
+            </div>
+
+            <h2 style="margin: 30px 0 20px; font-size: 20px;">Status Modułów (S/I/R/E)</h2>
+            <div class="grid">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">🔧 kernel</div>
+                        <span class="card-badge">Stable</span>
+                    </div>
+                    <div class="card-content">
+                        <strong>Core Dispatcher</strong><br>
+                        Wersja: 1.0.2<br>
+                        CPU: 8% • RAM: 120 MB<br>
+                        Uptime: 47h 32m
+                    </div>
+                    <div class="card-meta">Ostatnia zmiana: 2026-04-20</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">🔐 trust.mod</div>
+                        <span class="card-badge">Stable</span>
+                    </div>
+                    <div class="card-content">
+                        <strong>Web of Trust Engine</strong><br>
+                        Wersja: 0.9.1<br>
+                        CPU: 12% • RAM: 180 MB<br>
+                        Status: OK
+                    </div>
+                    <div class="card-meta">Ostatnia zmiana: 2026-04-19</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">📡 gossip.mod</div>
+                        <span class="card-badge">Stable</span>
+                    </div>
+                    <div class="card-content">
+                        <strong>P2P Messaging</strong><br>
+                        Wersja: 0.8.3<br>
+                        CPU: 5% • RAM: 95 MB<br>
+                        Peers: 12
+                    </div>
+                    <div class="card-meta">Ostatnia zmiana: 2026-04-18</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">💾 storage.mod</div>
+                        <span class="card-badge">Stable</span>
+                    </div>
+                    <div class="card-content">
+                        <strong>FileDB Local Storage</strong><br>
+                        Wersja: 1.1.0<br>
+                        CPU: 3% • RAM: 50 MB<br>
+                        Disk: 450 MB
+                    </div>
+                    <div class="card-meta">Ostatnia zmiana: 2026-04-20</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">❤️ heartbeat.mod</div>
+                        <span class="card-badge">Stable</span>
+                    </div>
+                    <div class="card-content">
+                        <strong>Health Monitor</strong><br>
+                        Wersja: 0.5.0<br>
+                        CPU: 2% • RAM: 30 MB<br>
+                        Interval: 10s
+                    </div>
+                    <div class="card-meta">Ostatnia zmiana: 2026-04-19</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">🔗 crypto.mod</div>
+                        <span class="card-badge yellow">Emerging</span>
+                    </div>
+                    <div class="card-content">
+                        <strong>Ed25519 Identity</strong><br>
+                        Wersja: 0.1.0-beta<br>
+                        CPU: 1% • RAM: 20 MB<br>
+                        Status: Testing
+                    </div>
+                    <div class="card-meta">ETA release: 2026-05-15</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">🎨 ui.mod</div>
+                        <span class="card-badge yellow">Emerging</span>
+                    </div>
+                    <div class="card-content">
+                        <strong>Web Dashboard</strong><br>
+                        Wersja: 0.2.0-alpha<br>
+                        CPU: 4% • RAM: 85 MB<br>
+                        Status: Development
+                    </div>
+                    <div class="card-meta">ETA release: 2026-06-01</div>
+                </div>
+            </div>
+
+            <h2 style="margin: 30px 0 20px; font-size: 20px;">Zależności Modułów</h2>
+            <pre style="background: rgba(30, 41, 59, 0.8); border: 1px solid #334155; border-radius: 8px; padding: 15px; font-size: 12px; overflow-x: auto;">
+kernel (core)
+├── storage.mod
+├── gossip.mod
+└── heartbeat.mod
+
+trust.mod
+├── kernel
+├── crypto.mod (pending)
+└── storage.mod
+
+ui.mod (dev)
+├── kernel
+├── trust.mod
+├── gossip.mod
+└── crypto.mod (pending)
+
+gossip.mod
+├── kernel
+└── crypto.mod (pending)
+            </pre>
+        </div>
+
+    </div>
+
+    <!-- MODAL -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Szczegóły</h2>
+                <button class="modal-close" onclick="closeModal()">✕</button>
+            </div>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <script>
+        function switchPage(page) {
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            
+            // Show selected page
+            document.getElementById(`page-${page}`).classList.add('active');
+            
+            // Update nav
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            event.target.closest('.nav-item').classList.add('active');
+        }
+
+        function startSystem() {
+            alert('✓ System uruchomiony');
+        }
+
+        function stopSystem() {
+            alert('✓ System zatrzymany');
+        }
+
+        function showBondDetail(bondId) {
+            const modal = document.getElementById('modal');
+            const details = {
+                '001': {
+                    title: '💰 RealBond #001 — Rower górski',
+                    content: `
+                        <div class="modal-detail">
+                            <div class="detail-label">Przedmiot</div>
+                            <div class="detail-value">Rower górski Specialized (2022)</div>
+                        </div>
+                        <div class="modal-detail">
+                            <div class="detail-label">Od (Zapraszający)</div>
+                            <div class="detail-value">Ty (TrustMetric: 0.82)</div>
+                        </div>
+                        <div class="modal-detail">
+                            <div class="detail-label">Do (Zaproszony)</div>
+                            <div class="detail-value">Marek (TrustMetric: 0.92)</div>
+                        </div>
+                        <div class="modal-detail">
+                            <div class="detail-label">Status</div>
+                            <div class="detail-value">Transferuje się (czeka potwierdzenia Marka)</div>
+                        </div>
+                        <div class="modal-detail">
+                            <div class="detail-label">Historia transferu</div>
+                            <div class="detail-value">
+                                2026-04-20 14:30 — Zaproponowana wymiana<br>
+                                2026-04-20 14:45 — Marek zaakceptował<br>
+                                2026-04-21 (oczekiwanie na confirmację)
+                            </div>
+                        </div>
+                        <div class="modal-detail">
+                            <div class="detail-label">Hash & Podpis</div>
+                            <div class="detail-value">Hash: 7f3d2a1b...<br>Podpis Ciebie: ✓<br>Podpis Marka: ✓</div>
+                        </div>
+                        <div class="modal-detail">
+                            <div class="detail-label">Profil relacji</div>
+                            <div class="detail-value">Przyjacielski • Decay: wolny</div>
+                        </div>
+                    `
+                },
+                '002': {
+                    title: '💰 RealBond #002 — Konsultacja biznesowa',
+                    content: `
+                        <div class="modal-detail">
+                            <div class="detail-label">Usługa</div>
+                            <div class="detail-value">20 godzin konsultacji biznesowej</div>
+                        </div>
+                        <div class="modal-detail">
+                            <div class="detail-label">Wierzyciel</div>
+                            <div class="detail-value">Zofia (TrustMetric: 0.88)</div>
+                        </div>
+                        <div class="modal-detail">
+                            <div class="detail-label">Dłużnik</div>
+                            <div class="detail-value">Ty (TrustMetric: 0.82)</div>
+                        </div>
+                        <div class="modal-detail">
+                            <div class="detail-label">Postęp</div>
+                            <div class="detail-value">15/20 godzin zrealizowanych (75%)</div>
+                        </div>
+                        <div class="modal-detail">
+                            <div class="detail-label">Sesje</div>
+                            <div class="detail-value">
+                                ✓ Sesja 1: 3h (2026-04-10)<br>
+                                ✓ Sesja 2: 4h (2026-04-15)<br>
+                                ✓ Sesja 3: 5h (2026-04-20)<br>
+                                ⏳ Sesja 4: 3h (zaplanowana: 2026-05-05)
+                            </div>
+                        </div>
+                        <div class="modal-detail">
+                            <div class="detail-label">Termin</div>
+                            <div class="detail-value">2026-05-15 (30 dni od utworzenia)</div>
+                        </div>
+                    `
+                },
+                '003': {
+                    title: '💰 RealBond #003 — Transfer książki',
+                    content: `
+                        <div class="modal-detail">
+                            <div class="detail-label">Przedmiot</div>
+                            <div class="detail-value">Homo Sapiens — Yuval Noah Harari</div>
+                        </div>
+                        <div class="modal-detail">
+                            <div class="detail-label">Od</div>
+                            <div class="detail-value">Ty (TrustMetric: 0.82)</div>
+                        </div>
+                        <div class="modal-detail">
+                            <div class="detail-label">Do</div>
+                            <div class="detail-value">Jan (TrustMetric: 0.65)</div>
+                        </div>
+                        <div class="modal-detail">
+                            <div class="detail-label">Status</div>
+                            <div class="detail-value"><span class="indicator warning"></span>Czeka — Partner offline</div>
+                        </div>
+                        <div class="modal-detail">
+                            <div class="detail-label">Problem</div>
+                            <div class="detail-value">Jan jest offline od 15 minut. System spróbuje ponownie za 30 minut.</div>
+                        </div>
+                        <div class="modal-detail">
+                            <div class="detail-label">Akcje dostępne</div>
+                            <div class="detail-value">• Ponów teraz<br>• Cofnij transfer<br>• Ustaw timeout</div>
+                        </div>
+                    `
+                },
+                '004': {
+                    title: '💰 RealBond #004 — Rozpuszczony',
+                    content: `
+                        <div class="modal-detail">
+                            <div class="detail-label">Zobowiązanie</div>
+                            <div class="detail-value">10 godzin pracy handlowej</div>
+                        </div>
+                        <div class="modal-detail">
+                            <div class="detail-label">Wierzyciel</div>
+                            <div class="detail-value">Anna (TrustMetric: 0.42)</div>
+                        </div>
+                        <div class="modal-detail">
+                            <div class="detail-label">Status</div>
+                            <div class="detail-value">ROZPUSZCZONY (windykacja społeczna)</div>
+                        </div>
+                        <div class="modal-detail">
+                            <div class="detail-label">Powód rozpuszczenia</div>
+                            <div class="detail-value">Niewywiązanie się z zobowiązania przez 45 dni. Mediacja: NIEUDANA</div>
+                        </div>
+                        <div class="modal-detail">
+                            <div class="detail-label">Eskalacja</div>
+                            <div class="detail-value">
+                                Poziom 1: Widoczność w Kręgu 2 — OK<br>
+                                Poziom 2: Mediacja grupy — Odrzucona przez Annę<br>
+                                Poziom 3: Soft ban — Pending decision
+                            </div>
+                        </div>
+                        <div class="modal-detail">
+                            <div class="detail-label">Wpływ na reputację</div>
+                            <div class="detail-value">Anna: TrustMetric -0.15 (u Ciebie)<br>Ty: TrustMetric -0.05 (ogólnie)</div>
+                        </div>
+                    `
+                },
+                '005': {
+                    title: '💰 RealBond #005 — Wymiana pielęgnacji',
+                    content: `
+                        <div class="modal-detail">
+                            <div class="detail-label">Wymiana</div>
+                            <div class="detail-value">Pielęgnacja ogrodu (profesjonalna)</div>
+                        </div>
+                        <div class="modal-detail">
+                            <div class="detail-label">Partner wymiany</div>
+                            <div class="detail-value">Tomek (TrustMetric: 0.61)</div>
+                        </div>
+                        <div class="modal-detail">
+                            <div class="detail-label">Struktura wymiany</div>
+                            <div class="detail-value">
+                                Ty oferujesz: 15h pielęgnacji profesjonalnej<br>
+                                Tomek oferuje: Naprawa drewutni (wartość: ~15h pracy)
+                            </div>
+                        </div>
+                        <div class="modal-detail">
+                            <div class="detail-label">Status</div>
+                            <div class="detail-value">Zaplanowana • Data: 2026-05-10</div>
+                        </div>
+                        <div class="modal-detail">
+                            <div class="detail-label">Profil relacji</div>
+                            <div class="detail-value">Sąsiedzki • Decay: lokalny, obecność liczy</div>
+                        </div>
+                    `
+                },
+                '006': {
+                    title: '💰 RealBond #006 — Mentoring',
+                    content: `
+                        <div class="modal-detail">
+                            <div class="detail-label">Usługa</div>
+                            <div class="detail-value">Mentoring: PHP basics — 8 sesji po 1h</div>
+                        </div>
+                        <div class="modal-detail">
+                            <div class="detail-label">Mentor (Ty)</div>
+                            <div class="detail-value">TrustMetric: 0.82 • Ekspertiza: PHP/Web Dev</div>
+                        </div>
+                        <div class="modal-detail">
+                            <div class="detail-label">Uczeń</div>
+                            <div class="detail-value">Kasia (TrustMetric: 0.71)</div>
+                        </div>
+                        <div class="modal-detail">
+                            <div class="detail-label">Postęp</div>
+                            <div class="detail-value">2/8 sesji ukończonych (25%)</div>
+                        </div>
+                        <div class="modal-detail">
+                            <div class="detail-label">Sesje</div>
+                            <div class="detail-value">
+                                ✓ Sesja 1: Basics (2026-04-15)<br>
+                                ✓ Sesja 2: Functions (2026-04-22)<br>
+                                ⏳ Sesja 3: OOP (zaplanowana: 2026-04-29)
+                            </div>
+                        </div>
+                        <div class="modal-detail">
+                            <div class="detail-label">Ocena Kasi</div>
+                            <div class="detail-value">★★★★☆ (4/5) — Bardzo dobry mentor, jasne wyjaśnienia</div>
+                        </div>
+                    `
+                }
+            };
+
+            const selected = details[bondId] || details['001'];
+            document.getElementById('modalTitle').textContent = selected.title;
+            document.getElementById('modalBody').innerHTML = selected.content;
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('modal');
+            if (event.target === modal) {
+                modal.classList.remove('active');
+            }
+        }
+    </script>
+
+</body>
+</html>

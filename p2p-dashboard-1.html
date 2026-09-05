@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P2P 60-24 OneClick Evo — Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* HEADER + STATUS */
+        .header {
+            max-width: 1200px;
+            margin: 0 auto 30px;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .node-info h1 {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .node-info p {
+            font-size: 13px;
+            color: #cbd5e1;
+        }
+
+        .node-status {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .status-item {
+            text-align: center;
+        }
+
+        .status-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #4ade80;
+            margin-bottom: 4px;
+        }
+
+        .status-label {
+            font-size: 12px;
+            color: #94a3b8;
+            text-transform: uppercase;
+        }
+
+        /* CONTROL PANEL */
+        .control-panel {
+            display: flex;
+            gap: 12px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-start {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-start:hover {
+            background: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-stop {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-stop:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-auto {
+            background: #6366f1;
+            color: white;
+        }
+
+        .btn-auto:hover {
+            background: #4f46e5;
+            transform: translateY(-2px);
+        }
+
+        /* GRID PORTLETÓW */
+        .portlet-grid {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .portlet {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .portlet:hover {
+            border-color: #64748b;
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        .portlet::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #10b981, #06b6d4);
+        }
+
+        .portlet-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+
+        .portlet-title {
+            font-size: 14px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        .portlet-content {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4ade80;
+            margin-bottom: 12px;
+        }
+
+        .portlet-desc {
+            font-size: 12px;
+            color: #64748b;
+            line-height: 1.5;
+        }
+
+        .portlet-expand {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            font-size: 20px;
+            opacity: 0.5;
+            transition: opacity 0.3s;
+        }
+
+        .portlet:hover .portlet-expand {
+            opacity: 1;
+        }
+
+        /* MODAL */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            font-size: 24px;
+        }
+
+        .modal-close {
+            background: #64748b;
+            color: white;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .modal-close:hover {
+            background: #475569;
+        }
+
+        .modal-detail {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #334155;
+        }
+
+        .modal-detail:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            font-size: 12px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .detail-value {
+            font-size: 16px;
+            color: #e2e8f0;
+        }
+
+        /* STATUS INDICATOR */
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-indicator.active {
+            background: #10b981;
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+        }
+
+        .status-indicator.inactive {
+            background: #64748b;
+        }
+
+        /* FOOTER */
+        .footer {
+            max-width: 1200px;
+            margin: 40px auto 0;
+            padding-top: 20px;
+            border-top: 1px solid #334155;
+            text-align: center;
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .node-status {
+                flex-direction: column;
+                gap: 15px;
+                width: 100%;
+            }
+
+            .control-panel {
+                width: 100%;
+            }
+
+            .portlet-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-content {
+                width: 95%;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <div class="header">
+        <div class="node-info">
+            <h1>🌐 Węzeł P2P Kraków</h1>
+            <p>Ostatnia synchronizacja: 2 minuty temu</p>
+        </div>
+
+        <div class="node-status">
+            <div class="status-item">
+                <div class="status-value" id="trustMetric">0.82</div>
+                <div class="status-label">TrustMetric</div>
+            </div>
+            <div class="status-item">
+                <div class="status-value" id="nodeStatus"><span class="status-indicator active"></span>Aktywny</div>
+                <div class="status-label">Status</div>
+            </div>
+            <div class="status-item">
+                <div class="status-value" id="peersCount">12</div>
+                <div class="status-label">Peerów</div>
+            </div>
+        </div>
+
+        <div class="control-panel">
+            <button class="btn-start" onclick="startNode()">▶ START</button>
+            <button class="btn-stop" onclick="stopNode()">⏹ STOP</button>
+            <button class="btn-auto" onclick="toggleAuto()">⚙ AUTO</button>
+        </div>
+    </div>
+
+    <!-- PORTLETY -->
+    <div class="portlet-grid">
+        <!-- Sieć -->
+        <div class="portlet" onclick="expandPortlet('network')">
+            <div class="portlet-expand">⤢</div>
+            <div class="portlet-icon">🌐</div>
+            <div class="portlet-title">Sieć Zaufania</div>
+            <div class="portlet-content">12</div>
+            <div class="portlet-desc">węzłów w DAG • 3 kręgi • Aktywna</div>
+        </div>
+
+        <!-- RealBonds -->
+        <div class="portlet" onclick="expandPortlet('realbonds')">
+            <div class="portlet-expand">⤢</div>
+            <div class="portlet-icon">💰</div>
+            <div class="portlet-title">RealBonds</div>
+            <div class="portlet-content">47</div>
+            <div class="portlet-desc">zobowiązań • 8 transferów • OK</div>
+        </div>
+
+        <!-- Reputacja -->
+        <div class="portlet" onclick="expandPortlet('reputation')">
+            <div class="portlet-expand">⤢</div>
+            <div class="portlet-icon">🎖️</div>
+            <div class="portlet-title">Reputacja</div>
+            <div class="portlet-content">+12%</div>
+            <div class="portlet-desc">Wzrost • Decay 2% • Core 5/5</div>
+        </div>
+
+        <!-- Wymiana -->
+        <div class="portlet" onclick="expandPortlet('exchange')">
+            <div class="portlet-expand">⤢</div>
+            <div class="portlet-icon">🔄</div>
+            <div class="portlet-title">Wymiana</div>
+            <div class="portlet-content">5</div>
+            <div class="portlet-desc">oczekujące • 2 w toku • 1 czeka</div>
+        </div>
+
+        <!-- Moduły -->
+        <div class="portlet" onclick="expandPortlet('modules')">
+            <div class="portlet-expand">⤢</div>
+            <div class="portlet-icon">⚡</div>
+            <div class="portlet-title">Moduły</div>
+            <div class="portlet-content">7</div>
+            <div class="portlet-desc">aktywne • 2 developing • Stabilne</div>
+        </div>
+
+        <!-- Status S/I/R/E -->
+        <div class="portlet" onclick="expandPortlet('health')">
+            <div class="portlet-expand">⤢</div>
+            <div class="portlet-icon">📊</div>
+            <div class="portlet-title">Zdrowotność</div>
+            <div class="portlet-content">S/I/R/E</div>
+            <div class="portlet-desc">Stable • CPU 35% • RAM 42%</div>
+        </div>
+    </div>
+
+    <!-- MODAL -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Szczegóły</h2>
+                <button class="modal-close" onclick="closeModal()">✕</button>
+            </div>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="footer">
+        P2P 60-24 OneClick Evo v1.0 · Kraków · 2026 · Offline-first • Decentralized • Modular
+    </div>
+
+    <script>
+        let nodeRunning = true;
+        let autoMode = false;
+
+        function expandPortlet(type) {
+            const modal = document.getElementById('modal');
+            const title = document.getElementById('modalTitle');
+            const body = document.getElementById('modalBody');
+
+            const details = {
+                network: {
+                    title: '🌐 Sieć Zaufania',
+                    content: `
+                        <div class="modal-detail">
+                            <div class="detail-label">Węzły w sieci</div>
+                            <div class="detail-value">12 aktywnych</div>
+                        </div>
+                        <div class="modal-detail">
+                            <div class="detail-label">Kręgi zaufania (Dunbar)</div>
+                            <div class="detail-value">
+                                Krąg 1 (Core): 5/5<br>
+                                Krąg 2 (Close): 12/15<br>
+                                Krąg 3 (Extended): 28/50
+                            </div>
+                        </div>
+                        <div class="modal-detail">
+                            <div class="detail-label">Struktura DAG</div>
+                            <div class="detail-value">Głębokość: 4 • Brak cykli</div>
+                        </div>
+                        <div class="modal-detail">
+                            <div class="detail-label">Ostatnia synchronizacja</div>
+                            <div class="detail-value">2 minuty temu</div>
+                        </div>
+                    `
+                },
+                realbonds: {
+                    title: '💰 RealBonds (Zobowiązania)',
+                    content: `
+                        <div class="modal-detail">
+                            <div class="detail-label">Razem zobowiązań</div>
+                            <div class="detail-value">47 RealBond (różne formy)</div>
+                        </div>
+                        <div class="modal-detail">
+                            <div class="detail-label">W trakcie transferu</div>
+                            <div class="detail-value">8 transferów • Średni czas: 1.2h</div>
+                        </div>
+                        <div class="modal-detail">
+                            <div class="detail-label">Rozegzekwowane</div>
+                            <div class="detail-value">2 (windykacja społeczna w Krąg 2)</div>
+                        </div>
+                        <div class="modal-detail">
+                            <div class="detail-label">Hash chain</div>
+                            <div class="detail-value">Niezmienny • Ed25519 verified</div>
+                        </div>
+                    `
+                },
+                reputation: {
+                    title: '🎖️ Reputacja & Decay',
+                    content: `
+                        <div class="modal-detail">
+                            <div class="detail-label">TrustMetric (główny)</div>
+                            <div class="detail-value">0.82 (+12% vs. ostatni miesiąc)</div>
+                        </div>
+                        <div class="modal-detail">
+                            <div class="detail-label">Decay model</div>
+                            <div class="detail-value">Profil mieszany • 2% roczny • Aktywność podtrzymuje</div>
+                        </div>
+                        <div class="modal-detail">
+                            <div class="detail-label">Ostatnie zmiany</div>
+                            <div class="detail-value">
+                                +0.03 (transakcja sukcesem: 2h pracy)<br>
+                                +0.01 (rekomendacja od Zofii)<br>
+                                -0.02 (late delivery - 1 dzień)
+                            </div>
+                        </div>
+                        <div class="modal-detail">
+                            <div class="detail-label">Status węzła chronionego</div>
+                            <div class="detail-value">—</div>
+                        </div>
+                    `
+                },
+                exchange: {
+                    title: '🔄 Wymiana & Transakcje',
+                    content: `
+                        <div class="modal-detail">
+                            <div class="detail-label">Oczekujące (pending)</div>
+                            <div class="detail-value">5 propozycji czekających na Twoją akcję</div>
+                        </div>
+                        <div class="modal-detail">
+                            <div class="detail-label">W toku</div>
+                            <div class="detail-value">
+                                • 20h konsultacji (Zofia, 75% completed)<br>
+                                • Wymiana: Książka→Rower (czeka potwierdzenie)
+                            </div>
+                        </div>
+                        <div class="modal-detail">
+                            <div class="detail-label">Czekające na partnera</div>
+                            <div class="detail-value">1 wymiana (partner offline, auto-retry w 30min)</div>
+                        </div>
+                        <div class="modal-detail">
+                            <div class="detail-label">Ostatnia wymiana</div>
+                            <div class="detail-value">8 godzin temu • Sukces</div>
+                        </div>
+                    `
+                },
+                modules: {
+                    title: '⚡ Moduły Systemowe',
+                    content: `
+                        <div class="modal-detail">
+                            <div class="detail-label">Aktywne (S=Stable)</div>
+                            <div class="detail-value">
+                                • kernel (core dispatcher)<br>
+                                • trust.mod (Web of Trust)<br>
+                                • gossip.mod (P2P messaging)<br>
+                                • storage.mod (FileDB local)<br>
+                                • heartbeat.mod (health monitor)
+                            </div>
+                        </div>
+                        <div class="modal-detail">
+                            <div class="detail-label">W rozwoju (E=Emerging)</div>
+                            <div class="detail-value">
+                                • crypto.mod (Ed25519 identity)<br>
+                                • ui.mod (web dashboard)
+                            </div>
+                        </div>
+                        <div class="modal-detail">
+                            <div class="detail-label">System zasobów</div>
+                            <div class="detail-value">CPU: 35% • RAM: 42% • Disk: 18%</div>
+                        </div>
+                    `
+                },
+                health: {
+                    title: '📊 Zdrowotność Węzła',
+                    content: `
+                        <div class="modal-detail">
+                            <div class="detail-label">Model S/I/R/E</div>
+                            <div class="detail-value">
+                                S (Stable): 5 modułów ✓<br>
+                                I (Ill): 0 modułów ✓<br>
+                                R (Recovery): 0 modułów ✓<br>
+                                E (Emerging): 2 moduły ✓
+                            </div>
+                        </div>
+                        <div class="modal-detail">
+                            <div class="detail-label">Zasoby systemowe</div>
+                            <div class="detail-value">
+                                CPU: 35% (użytkownika)<br>
+                                RAM: 42% (420 MB z 1 GB)<br>
+                                Dysk: 18% (utilizacja)
+                            </div>
+                        </div>
+                        <div class="modal-detail">
+                            <div class="detail-label">Sleep schedule</div>
+                            <div class="detail-value">Aktywny • Następny sleep: za 4h</div>
+                        </div>
+                        <div class="modal-detail">
+                            <div class="detail-label">Ostatni restart</div>
+                            <div class="detail-value">2 dni temu • Uptime: 47h 32min</div>
+                        </div>
+                    `
+                }
+            };
+
+            const selected = details[type] || details.network;
+            title.textContent = selected.title;
+            body.innerHTML = selected.content;
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+        }
+
+        function startNode() {
+            nodeRunning = true;
+            document.getElementById('nodeStatus').innerHTML = '<span class="status-indicator active"></span>Aktywny';
+            console.log('NODE STARTED');
+        }
+
+        function stopNode() {
+            nodeRunning = false;
+            document.getElementById('nodeStatus').innerHTML = '<span class="status-indicator inactive"></span>Zatrzymany';
+            console.log('NODE STOPPED');
+        }
+
+        function toggleAuto() {
+            autoMode = !autoMode;
+            if (autoMode) {
+                document.querySelector('.btn-auto').textContent = '⚙ AUTO (ON)';
+                document.querySelector('.btn-auto').style.background = '#8b5cf6';
+                console.log('AUTO MODE: ON');
+            } else {
+                document.querySelector('.btn-auto').textContent = '⚙ AUTO';
+                document.querySelector('.btn-auto').style.background = '#6366f1';
+                console.log('AUTO MODE: OFF');
+            }
+        }
+
+        // Zamknij modal na klik poza zawartością
+        window.onclick = function(event) {
+            const modal = document.getElementById('modal');
+            if (event.target === modal) {
+                modal.classList.remove('active');
+            }
+        }
+    </script>
+
+</body>
+</html>
