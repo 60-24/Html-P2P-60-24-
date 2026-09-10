@@ -102,19 +102,22 @@ func TestStatusCommandHealthy(t *testing.T) {
 	}
 }
 
-// Test 5: Status Command with Missing Config (unhealthy path — note: os.Exit
-// makes true exit-code testing hard in-process, so we verify LoadFromFile
-// itself fails, which is the precondition status relies on).
-func TestStatusCommandDetectsMissingConfig(t *testing.T) {
+// Test 5: Status Command with Missing Config (unhealthy path).
+// Prior to review, this command called os.Exit(1) directly on failure,
+// which would have killed the test binary if tested here. Fixed to return
+// an error instead (see status.go) - root.Execute() already maps any
+// command error to exit code 1, so this test can now safely exercise the
+// actual unhealthy path in-process.
+func TestStatusCommandUnhealthy(t *testing.T) {
 	root := NewRootCommand()
-	root.SetArgs([]string{"peer", "list", "--config", "/nonexistent/config.yaml"})
+	root.SetArgs([]string{"status", "--config", "/nonexistent/config.yaml"})
 
 	err := root.Execute()
 	if err == nil {
-		t.Errorf("Expected error for missing config file")
+		t.Errorf("Expected error for status check against missing config")
 	}
-	if !strings.Contains(err.Error(), "failed to load config") {
-		t.Errorf("Expected human-friendly error message, got: %v", err)
+	if !strings.Contains(err.Error(), "UNHEALTHY") {
+		t.Errorf("Expected UNHEALTHY marker in error, got: %v", err)
 	}
 }
 
@@ -146,6 +149,21 @@ func TestEventExportCommand(t *testing.T) {
 
 	if err := root.Execute(); err != nil {
 		t.Fatalf("event export command failed: %v", err)
+	}
+}
+
+// Bonus Test: Any command with missing config produces wrapped,
+// human-friendly error (general contract, checked via `peer list`).
+func TestMissingConfigProducesWrappedError(t *testing.T) {
+	root := NewRootCommand()
+	root.SetArgs([]string{"peer", "list", "--config", "/nonexistent/config.yaml"})
+
+	err := root.Execute()
+	if err == nil {
+		t.Errorf("Expected error for missing config file")
+	}
+	if !strings.Contains(err.Error(), "failed to load config") {
+		t.Errorf("Expected human-friendly error message, got: %v", err)
 	}
 }
 

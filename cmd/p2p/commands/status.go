@@ -2,7 +2,6 @@ package commands
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/spf13/cobra"
 
@@ -23,8 +22,14 @@ Designed for use in scripts and container healthchecks:
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cfg, err := config.LoadFromFile(configPath)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "✗ UNHEALTHY: %v\n", err)
-				os.Exit(1)
+				// Return the error rather than calling os.Exit directly:
+				// (1) root.Execute() already exits 1 on any command error,
+				//     so this achieves the documented exit-code contract
+				//     without duplicating exit logic here, and
+				// (2) it keeps this command testable in-process — a direct
+				//     os.Exit() call here would kill the test binary itself
+				//     rather than just failing the test.
+				return fmt.Errorf("✗ UNHEALTHY: %w", err)
 			}
 
 			fmt.Printf("✓ HEALTHY\n")
