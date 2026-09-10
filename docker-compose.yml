@@ -1,0 +1,44 @@
+# Local 3-node P2P 60-24 network for development/testing.
+# Mirrors the NetworkSimulator scenarios from SESJA #4 but as real
+# containerized processes.
+
+version: "3.8"
+
+services:
+  alice:
+    build: .
+    container_name: p2p-alice
+    ports:
+      - "6024:6024/udp"
+      - "9091:9090"
+    environment:
+      - P2P_NETWORK_PORT=6024
+      - P2P_MONITORING_PROMETHEUS_PORT=9090
+    command: ["run", "--config", "/etc/p2p/default.yaml", "--verbose"]
+
+  bob:
+    build: .
+    container_name: p2p-bob
+    ports:
+      - "6025:6024/udp"
+      - "9092:9090"
+    environment:
+      - P2P_NETWORK_PORT=6024
+      - P2P_MONITORING_PROMETHEUS_PORT=9090
+    command: ["run", "--config", "/etc/p2p/default.yaml", "--verbose"]
+    depends_on:
+      - alice
+
+  charlie:
+    build: .
+    container_name: p2p-charlie
+    ports:
+      - "6026:6024/udp"
+      - "9093:9090"
+    environment:
+      - P2P_NETWORK_PORT=6024
+      - P2P_MONITORING_PROMETHEUS_PORT=9090
+    command: ["run", "--config", "/etc/p2p/default.yaml", "--verbose"]
+    depends_on:
+      - alice
+      - bob
