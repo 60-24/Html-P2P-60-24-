@@ -10,12 +10,12 @@ import (
 
 // ByzantineSimulator symuluje Byzantine (adversarial) węzły
 type ByzantineSimulator struct {
-	mu                  sync.RWMutex
-	simulator           *NetworkSimulator
-	byzantineNodeID     string
-	byzantineStrategy   string // "always_reject", "random", "delay", "double_vote"
-	rejectionRateFloat64 float64
-	delayMS             int
+	mu                sync.RWMutex
+	simulator         *NetworkSimulator
+	byzantineNodeID   string
+	byzantineStrategy string // "always_reject", "random", "delay", "double_vote"
+	rejectionRate     float64
+	delayMS           int
 }
 
 // NewByzantineSimulator tworzy simulator
@@ -176,12 +176,11 @@ func (bs *ByzantineSimulator) TriggerTimeout(eventID string) {
 	}
 }
 
-// Helper: rejectionRate field (go doesn't support init in struct def)
+// SetRejectionRate configures the rejection probability for the
+// "random" strategy (reserved for future use; "always_reject" and
+// "random" currently use fixed weights - see randomVoting above).
 func (bs *ByzantineSimulator) SetRejectionRate(rate float64) {
 	bs.mu.Lock()
 	defer bs.mu.Unlock()
 	bs.rejectionRate = rate
 }
-
-// Helper attribute
-var rejectionRate float64

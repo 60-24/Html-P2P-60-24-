@@ -1,0 +1,18 @@
+# P2P 60-24 OneClick Evo — Default Configuration
+# See ADR-007 (Configuration Management) for design rationale.
+# Override any value via P2P_<SECTION>_<KEY> environment variables.
+
+network:
+  port: 6024
+  peers: []          # e.g. ["peer1.example.com:6024", "peer2.example.com:6024"]
+
+persistence:
+  engine: inmemory    # "inmemory" | "rocksdb" (rocksdb: SESJA #6, see ADR-005)
+  path: /var/p2p/data
+
+monitoring:
+  prometheus_port: 9090
+
+consensus:
+  timeout_sec: 5
+  byzantine_threshold: 0.66
