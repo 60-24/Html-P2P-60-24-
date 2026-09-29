@@ -1,0 +1,257 @@
+{
+  "@context": {
+    "@vocab": "https://p2p.60-24.dev/ontology/",
+    "node": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "owl": "http://www.w3.org/2002/07/owl#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#"
+  },
+  "@graph": [
+    {
+      "@id": "omnikernel:Identity",
+      "@type": "owl:Class",
+      "rdfs:label": "Identity (Tożsamość)",
+      "rdfs:comment": "Każdy byt ma unikalny ID - niezmienny, kryptograficzny (klucz publiczny Ed25519)",
+      "axiom": "INVARIANT: Identity is immutable and cryptographically bound",
+      "level": "OmniKernel"
+    },
+    {
+      "@id": "omnikernel:Relation",
+      "@type": "owl:Class",
+      "rdfs:label": "Relation (Relacja)",
+      "rdfs:comment": "Więź między dwiema tożsamościami - kierunkowa (A→B ≠ B→A), oparta na zaufaniu [0,1]",
+      "axiom": "INVARIANT: Relations are directional and bounded by TrustMetric",
+      "level": "OmniKernel"
+    },
+    {
+      "@id": "omnikernel:Event",
+      "@type": "owl:Class",
+      "rdfs:label": "Event (Zdarzenie)",
+      "rdfs:comment": "Atomowa zmiana stanu - czasomierz + przyczyna, immutable log (source of truth)",
+      "axiom": "INVARIANT: Events form an immutable append-only log (Event Sourcing)",
+      "level": "OmniKernel"
+    },
+    {
+      "@id": "omnikernel:Commitment",
+      "@type": "owl:Class",
+      "rdfs:label": "Commitment (Zobowiązanie)",
+      "rdfs:comment": "Kontrakt między bytami - HappyCoin = wartość zobowiązania, Quorum = potwierdzenie",
+      "axiom": "INVARIANT: Commitment value is immutable (weksel, nie token)",
+      "formula": "HC = Time × Quality × Satisfaction",
+      "level": "OmniKernel"
+    },
+    {
+      "@id": "omnikernel:Reputation",
+      "@type": "owl:Class",
+      "rdfs:label": "Reputation (Reputacja)",
+      "rdfs:comment": "Iloczyn (nie suma!) relacji - dynamiczny, zmienia się w czasie",
+      "axiom": "INVARIANT: Reputation = ∏(Relations) — multiplicative, not additive",
+      "formula": "Rep(A) = Consistency × Trustworthiness × Knowledge × Experience",
+      "level": "OmniKernel",
+      "property": "One poor rating collapses entire reputation"
+    },
+    {
+      "@id": "realbond:DAG",
+      "@type": "owl:Class",
+      "rdfs:label": "RealBond DAG (Pseudo-blockchain relacji)",
+      "rdfs:comment": "DAG struktura dla relacji (nie łańcuch), przechowuje HISTORIĘ RELACJI",
+      "axiom": "INVARIANT: RealBond DAG has no cycles, topologically sorted",
+      "differs_from": "Blockchain: Przechowuje relacje zamiast transakcji, weksel zamiast tokenu",
+      "level": "System"
+    },
+    {
+      "@id": "terraos:EventBus",
+      "@type": "owl:Class",
+      "rdfs:label": "Event Bus (Engine #1: Publishing)",
+      "rdfs:comment": "Węzeł publikuje Event (signed, timestamped)",
+      "operation": "Emit(event) → sign with Ed25519 → queue",
+      "level": "TERRA OS Core"
+    },
+    {
+      "@id": "terraos:Broadcasting",
+      "@type": "owl:Class",
+      "rdfs:label": "Broadcasting (Engine #2: Gossip Protocol)",
+      "rdfs:comment": "BroadcastEvent() → all connected peers via epidemic protocol",
+      "operation": "Gossip with TTL decay",
+      "level": "TERRA OS Core"
+    },
+    {
+      "@id": "terraos:Listening",
+      "@type": "owl:Class",
+      "rdfs:label": "Event Listening (Engine #3: Reception)",
+      "rdfs:comment": "ListenForEvents() → receive & process from peers",
+      "operation": "Verify signature → Boundary check (trust + resource)",
+      "level": "TERRA OS Core"
+    },
+    {
+      "@id": "terraos:StateEngine",
+      "@type": "owl:Class",
+      "rdfs:label": "State Engine (Engine #4: State Application)",
+      "rdfs:comment": "ApplyEvent() → aktualizacja lokalnego stanu",
+      "axiom": "State = projection(EventHistory) — deterministic replay",
+      "level": "TERRA OS Core"
+    },
+    {
+      "@id": "terraos:Consensus",
+      "@type": "owl:Class",
+      "rdfs:label": "Consensus Layer (Engine #5: Byzantine FT)",
+      "rdfs:comment": "Resonance-based consensus (nie PoW/PoS) - >66% peer agreement",
+      "axiom": "INVARIANT: Quorum = max(3, min(5, floor(N/2)))",
+      "level": "TERRA OS Core"
+    },
+    {
+      "@id": "terraos:NetworkTopology",
+      "@type": "owl:Class",
+      "rdfs:label": "Network Topology (Engine #6: Discovery)",
+      "rdfs:comment": "Dynamiczna topologia - peer discovery via UDP 6024",
+      "operation": "First Handshake Protocol: INIT → PING/PONG → STATE_SYNC → GOSSIP",
+      "level": "TERRA OS Core"
+    },
+    {
+      "@id": "kernel:Lifecycle",
+      "@type": "owl:Class",
+      "rdfs:label": "Node Lifecycle State Machine",
+      "states": ["INIT", "RUNNING", "CONSENSUS", "SHUTDOWN"],
+      "transitions": "INIT→RUNNING: load checkpoint, init EventStore | RUNNING→CONSENSUS: collect sigs | SHUTDOWN: save log + state",
+      "level": "Node Runtime"
+    },
+    {
+      "@id": "protocol:FirstHandshake",
+      "@type": "owl:Class",
+      "rdfs:label": "First Handshake Protocol (UDP 6024)",
+      "steps": [
+        "1. INIT: Broadcast discovery 'Hello, I am A'",
+        "2. DISCOVERED: B receives, sends 'Welcome!'",
+        "3. PING/PONG: Exchange pubkeys + timestamp",
+        "4. STATE_SYNC: Exchange last state + events",
+        "5. GOSSIP_ACTIVE: Regular event broadcasts",
+        "6. DAG_UPDATE: New vertex in RealBond"
+      ],
+      "level": "Network Protocol"
+    },
+    {
+      "@id": "formula:HappyCoin",
+      "@type": "owl:Class",
+      "rdfs:label": "HappyCoin (HC) - Immutable Commitment Value",
+      "formula": "HC = T (time) × Q (quality 1-10) × S (satisfaction 1-10)",
+      "properties": [
+        "Immutable weksel (nie token)",
+        "Brak ceny rynkowej",
+        "Brak wahań kursu (200 PLN = zawsze 200 PLN)",
+        "Więź tylko między konkretnymi osobami"
+      ],
+      "level": "Economy"
+    },
+    {
+      "@id": "formula:TrustMetric",
+      "@type": "owl:Class",
+      "rdfs:label": "Trust Metric (A→B) - Capability for Action",
+      "formula": "TrustMetric(A→B) = Σ(RelEvent_i) × Decay(t_i) × ProfileWeight(p)",
+      "decay": "Decay(t) = e^(-λ*t) where λ = 0.01 (weekly decay)",
+      "thresholds": {
+        "0.9-1.0": "Zaufaj bezwarunkowo",
+        "0.7-0.9": "Zaufaj z ostrożnością",
+        "0.5-0.7": "Weryfikuj",
+        "0.0-0.5": "Nie zaufaj"
+      },
+      "level": "Trust System"
+    },
+    {
+      "@id": "model:DunbarCircles",
+      "@type": "owl:Class",
+      "rdfs:label": "Dunbar Circles - Layered Trust Thresholds",
+      "circles": [
+        {"circle": 1, "count": 5, "name": "rodzina bliska", "tm_threshold": ">0.95"},
+        {"circle": 2, "count": 15, "name": "bliscy przyjaciele", "tm_threshold": ">0.85"},
+        {"circle": 3, "count": 50, "name": "przyjaciele", "tm_threshold": ">0.70"},
+        {"circle": 4, "count": 150, "name": "znajomi", "tm_threshold": ">0.50"},
+        {"circle": 5, "count": 500, "name": "loose acquaintances", "tm_threshold": ">0.30"},
+        {"circle": 6, "count": 1500, "name": "słyszałem o nich", "tm_threshold": ">0.10"}
+      ],
+      "level": "Social Model"
+    },
+    {
+      "@id": "protocol:ProofOfMeeting",
+      "@type": "owl:Class",
+      "rdfs:label": "Proof of Meeting - Cryptographic Relation Verification",
+      "steps": [
+        "1. A publishes: 'Met B on topic X' with {timestamp, location_hash, context}",
+        "2. A signs: sig_A = Ed25519.Sign(A_privkey, payload)",
+        "3. B confirms: 'I confirm meeting with A'",
+        "4. B signs: sig_B = Ed25519.Sign(B_privkey, payload)",
+        "5. Proof: Hash(sig_A + sig_B + payload)",
+        "6. System: RealBond records A↔B, TrustMetric += delta"
+      ],
+      "axiom": "INVARIANT: Proof of Meeting requires bilateral cryptographic confirmation",
+      "level": "Trust Protocol"
+    },
+    {
+      "@id": "formula:Quorum",
+      "@type": "owl:Class",
+      "rdfs:label": "Quorum for Mediation - Democratic Decision Making",
+      "formula": "Quorum = max(3, min(5, floor(N/2)))",
+      "where": "N = liczba osób w Kręgu 1+2 wierzyciela",
+      "rules": [
+        "Minimum 3 people",
+        "Maximum 5 people",
+        "If N > 10: floor(N/2)",
+        "Votes >= Quorum → Final decision"
+      ],
+      "level": "Governance"
+    },
+    {
+      "@id": "formula:NetworkReadiness",
+      "@type": "owl:Class",
+      "rdfs:label": "Network Readiness Index",
+      "formula": "NR = (nodes/300) × (avg_peers/12) × (modules/20)",
+      "thresholds": {
+        "< 0.3": "Network not ready",
+        "0.3-0.7": "Network becoming capable",
+        "> 0.7": "Network fully capable"
+      },
+      "level": "Operational Metric"
+    },
+    {
+      "@id": "constitution:Covenant",
+      "@type": "owl:Class",
+      "rdfs:label": "Constitutional Covenant (Prawo Przetrwania)",
+      "laws": [
+        "Law 1: Identity is immutable",
+        "Law 2: All events must be signed",
+        "Law 3: DAG cannot have cycles",
+        "Law 4: Quorum must be respected",
+        "Law 5: RealBond is source of truth"
+      ],
+      "obligations": [
+        "Node must listen to all peers",
+        "Node must verify signatures",
+        "Node must apply events in causal order",
+        "Node must store full Event Log",
+        "Node must participate in quorum"
+      ],
+      "level": "Constitutional"
+    },
+    {
+      "@id": "architecture:Boundary",
+      "@type": "owl:Class",
+      "rdfs:label": "3-Level Boundary Architecture",
+      "layers": [
+        {
+          "level": 1,
+          "name": "Data Boundary",
+          "function": "Envelope validation, format checks, schema verification"
+        },
+        {
+          "level": 2,
+          "name": "Trust Boundary",
+          "function": "Signature verification, TrustMetric evaluation, permission checks"
+        },
+        {
+          "level": 3,
+          "name": "Resource Boundary",
+          "function": "Resource allocation, capability matching, scheduling"
+        }
+      ],
+      "axiom": "INVARIANT: Each boundary enforces local constraints without global state"
+    }
+  ]
+}

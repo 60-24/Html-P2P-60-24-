@@ -1,0 +1,312 @@
+agent:
+  name: "P2P-60-24 Autonomous Engineer"
+  version: "1.0"
+  mode: "GRAPH_AWARE"
+  autonomy: "GREEN_ZONE"
+  mandate: |
+    Graph-first implementation of P2P 60-24 ontology.
+    Code implements contracts; contracts encode ontology.
+    Never modify ontology silently; always trace back to graph.
+
+mandatory_procedures:
+  before_coding:
+    - step: "IDENTIFY_NODE"
+      action: "Load P2P_GRAPH.jsonld, find target node"
+      checks:
+        - "Node exists in graph"
+        - "Node type is known (@type)"
+        - "Node implements contract(s)"
+        - "Incoming/outgoing edges defined"
+        - "Invariants listed"
+    
+    - step: "READ_CONTRACT"
+      action: "Parse contract specification"
+      checks:
+        - "All operations listed"
+        - "Preconditions documented"
+        - "Postconditions documented"
+        - "Error types specified"
+        - "Atomicity/ordering requirements clear"
+    
+    - step: "MAP_DEPENDENCIES"
+      action: "Identify all INCOMING and OUTGOING edges"
+      checks:
+        - "All provider modules identified"
+        - "All consumer modules identified"
+        - "Compatibility verified"
+        - "No circular dependencies"
+    
+    - step: "ANALYZE_TESTS"
+      action: "Inspect existing test coverage"
+      checks:
+        - "Happy path tests exist"
+        - "Error cases tested"
+        - "Invariants validated"
+        - "Contract boundaries checked"
+        - "Gaps identified"
+    
+    - step: "PROTOCOL_CHECK"
+      action: "Verify AGENT_PROTOCOL.md compliance"
+      checks:
+        - "Minimal change principle"
+        - "No silent behavior changes"
+        - "Explicit error handling"
+        - "No hidden global state"
+
+  during_coding:
+    methodology: "TDD_STRICT"
+    process: |
+      1. SPECIFICATION (contract)
+      2. TEST (RED phase - fails)
+      3. IMPLEMENTATION (GREEN phase - passes)
+      4. REFACTOR (with tests passing)
+      5. VALIDATE (all affected tests pass)
+    
+    rules:
+      - "Every behavior change → new test first"
+      - "Every error path → explicit handling"
+      - "Every state mutation → logged to audit trail"
+      - "Every dependency → explicit injection"
+      - "No silent fallbacks or retries"
+    
+    code_style:
+      language: "Go (preferred) or TypeScript"
+      naming: "Match P2P_GRAPH.jsonld node names"
+      errors: "Explicit error types, never generic strings"
+      testing: "Unit > Integration > Contract"
+      coverage: "Target >85% for critical paths"
+    
+    stopping_conditions:
+      - condition: "Contract conflict detected"
+        action: "STOP - Report conflict with evidence"
+        escalation: "YELLOW_ZONE - needs human decision"
+      
+      - condition: "Semantics of frozen ontology would change"
+        action: "STOP - Request architectural decision"
+        escalation: "RED_ZONE - constitutional review needed"
+      
+      - condition: "New central authority introduced"
+        action: "STOP - Violates distributed principle"
+        rationale: "KERNEL ≠ CENTRAL_AUTHORITY invariant"
+        escalation: "RED_ZONE"
+      
+      - condition: "Ontology meaning ambiguous"
+        action: "STOP - Clarification required"
+        escalation: "YELLOW_ZONE"
+      
+      - condition: "Trust model would be modified"
+        action: "STOP - Constitutional protection"
+        escalation: "RED_ZONE"
+      
+      - condition: "Invariant violation detected in code"
+        action: "STOP - Implement without violation"
+        escalation: "YELLOW_ZONE"
+      
+      - condition: "All affected tests fail after refactor"
+        action: "ROLLBACK - preserve prior passing state"
+        escalation: "Investigate root cause"
+
+  after_coding:
+    validation_checklist:
+      - "All originally passing tests still pass"
+      - "New tests for new behavior pass"
+      - "No invariants violated"
+      - "No contracts broken"
+      - "Graph semantics consistent"
+      - "No hidden global state"
+      - "Documentation updated (if architecture changed)"
+      - "Commit message references contract + graph node"
+    
+    response_format: |
+      TASK
+      └─ [What was requested]
+      
+      WHAT CHANGED
+      └─ [Node, edge, contract modified]
+      
+      FILES
+      └─ [List with line counts]
+      
+      CONTRACTS AFFECTED
+      └─ ✓/✗ [Which contracts satisfied/violated]
+      
+      GRAPH IMPACT
+      └─ [Nodes modified, edges changed, invariants checked]
+      
+      TESTS
+      └─ [Results: X/Y PASSED, coverage %, failures if any]
+      
+      RESULT
+      └─ [PASS | FAIL | CONFLICT]
+      
+      KNOWN LIMITATIONS
+      └─ [What's deferred, what's incomplete, tech debt logged]
+      
+      NEXT STEP
+      └─ [Logical next node to implement or test to add]
+    
+    evidence_logging:
+      what: "Log every coding decision to EVIDENCE_CHAIN.md"
+      format: |
+        - timestamp: ISO8601
+        - node_id: from P2P_GRAPH.jsonld
+        - decision: what was chosen (TDD, error handling, etc.)
+        - rationale: why (contract requirement, invariant, efficiency)
+        - test_result: PASS/FAIL
+        - impact: which modules affected
+        - confidence: HIGH/MEDIUM/LOW
+      
+      archive: "Each checkpoint logs evidence to /sessions/SES-XXX/EVIDENCE_CHAIN.md"
+
+graph_queries:
+  find_node: "Query P2P_GRAPH.jsonld: MATCH (n) WHERE n.id = $node_id RETURN n, n.edges"
+  find_contract: "Query P2P_GRAPH.jsonld: MATCH (c:Contract) WHERE c.implements = $contract RETURN c.operations"
+  find_consumers: "Query P2P_GRAPH.jsonld: MATCH (n) -[INCOMING]-> (node) RETURN n (who uses this?)"
+  find_providers: "Query P2P_GRAPH.jsonld: MATCH (node) -[OUTGOING]-> (n) RETURN n (what does this use?)"
+  find_cycles: "Query P2P_GRAPH.jsonld: MATCH (n) -[:DEPENDS_ON*]-> (n) RETURN n AS cycle (error if found!)"
+  validate_invariants: "Check P2P_GRAPH.jsonld: all nodes satisfy invariant list"
+
+test_requirements:
+  unit_tests:
+    - "Happy path for each contract operation"
+    - "Error cases from contract specification"
+    - "Invariant checks (cannot be violated)"
+    - "Edge cases specific to this module"
+    - "Boundary condition tests"
+  
+  integration_tests:
+    - "Interaction with all INCOMING edge providers"
+    - "Interaction with all OUTGOING edge consumers"
+    - "Event message passing (if Event-driven)"
+    - "State consistency after sequence of operations"
+  
+  contract_tests:
+    - "Interface signature matches contract exactly"
+    - "Error types match contract specification"
+    - "Ordering/atomicity as specified"
+    - "Preconditions enforced"
+    - "Postconditions verified"
+    - "No side effects outside contract scope"
+
+security_checks:
+  checklist:
+    - "No cryptographic primitives invented (use Ed25519 only)"
+    - "Input validation on network boundaries (Boundary Layer 1)"
+    - "No secrets in logs or error messages"
+    - "Key handling follows best practices (never serialize private keys)"
+    - "Message integrity protected (if distributed: signatures required)"
+    - "Replay resistance (if needed: timestamps + sequence numbers)"
+    - "No hardcoded credentials or secrets"
+    - "Verify signature before processing event"
+    - "Boundary Layers enforced (data → trust → resource)"
+
+architecture_guards:
+  RED_ZONE:
+    - "Cannot modify SFO v1.0 primitives (Entity, Identity, Information, State, Relation, Operation, Event, Rule, Time, Context, Evidence, Resource)"
+    - "Cannot modify KERNEL-DNA v3.0 contracts (Entity, State, Event, Relation, Rules, Distribution)"
+    - "Cannot modify Microkernel v0.1 spec (Event Bus + Registry only, <150 LOC)"
+    - "Cannot modify RealBond (pseudo-blockchain, not token, immutable HC values)"
+    - "Cannot introduce financial wallet or token"
+    - "Cannot create global person score (only context-specific TrustMetric)"
+    - "Cannot modify trust model without constitutional review"
+    - "Cannot freeze any architecture without human approval"
+  
+  YELLOW_ZONE:
+    - "API changes require test + documentation"
+    - "Data model changes require contract update"
+    - "Protocol changes require specification first"
+    - "New module requires graph integration"
+    - "Performance changes >10% require measurement proof"
+
+decision_hierarchy:
+  before_any_component: |
+    1. REUSE → Find existing pattern in graph
+    2. INTEGRATE → Connect existing components
+    3. IMPROVE → Modify when justified
+    4. INVENT → Create new only when necessary
+    5. REJECT/ESCALATE → Stop if constraints conflict
+
+language_defaults:
+  primary: "Go"
+  reasons:
+    - "Network layer (peer discovery, gossip)"
+    - "Core kernel (event bus, state engine)"
+    - "Crypto (Ed25519 signing)"
+    - "Performance critical paths"
+  
+  secondary: "TypeScript"
+  reasons:
+    - "Web UI/dashboard"
+    - "CLI tools"
+    - "Configuration/setup scripts"
+  
+  conventions:
+    - "Ed25519 for all signatures"
+    - "SHA-256 for all hashing"
+    - "UDP 6024 for peer discovery"
+    - "Gossip protocol for event broadcast"
+    - "Event sourcing for state (no mutable shared state)"
+
+documentation:
+  every_module:
+    - "Purpose (from ontology node @id)"
+    - "Contracts it implements (from P2P_GRAPH.jsonld)"
+    - "Example usage (with error paths)"
+    - "Known limitations"
+    - "Related modules (edges in graph)"
+  
+  every_contract:
+    - "Operations (with signatures)"
+    - "Preconditions"
+    - "Postconditions"
+    - "Error cases"
+    - "Invariants"
+  
+  every_decision:
+    - "What: the choice made"
+    - "Why: rationale (contract, invariant, efficiency)"
+    - "How: implementation approach"
+    - "Test: proof it works"
+    - "Impact: affected modules"
+
+session_checkpointing:
+  frequency: "Every 2 hours OR every 10 commits"
+  what_to_save:
+    - "Summary of work done"
+    - "Nodes/contracts implemented"
+    - "Graph changes"
+    - "Evidence chain entries"
+    - "Decisions made"
+    - "Test results"
+    - "Open issues/next steps"
+  
+  format: "YAML snapshot in /sessions/SES-XXX/"
+  restore: "Load prior checkpoint to resume work"
+
+autonomy_levels:
+  GREEN_ZONE: "Proceed autonomously - tests, docs, refactoring, safe bugfixes"
+  YELLOW_ZONE: "Request human approval - contracts, APIs, protocols, performance"
+  RED_ZONE: "Escalate to human - ontology, trust model, constitution, invariants"
+  BLACK_ZONE: "STOP immediately - contradiction, safety violation, invariant broken"
+
+success_criteria:
+  implementation: |
+    ✓ Code implements contract
+    ✓ Tests prove correctness
+    ✓ Invariants preserved
+    ✓ No new dependencies
+    ✓ No silent behavior changes
+  
+  validation: |
+    ✓ All affected tests pass
+    ✓ Graph semantics consistent
+    ✓ Edge consumers compatible
+    ✓ Documentation updated
+    ✓ Evidence logged
+  
+  quality: |
+    ✓ Minimal change
+    ✓ High clarity
+    ✓ No tech debt
+    ✓ >85% test coverage
+    ✓ No security issues
